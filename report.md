@@ -43,19 +43,20 @@ Cài đặt của ứng dụng dựa trên các tham số tiêu chuẩn bao gồ
 ### 2.1 Sơ Đồ Thuật Toán và Giải Thích Cơ Chế Thực Thi
 #### 2.1.1. Phương pháp Chia đôi (Bisection Method):
 Đây là phương pháp có độ ổn định cao nhất vì nó không phụ thuộc vào tính chất đạo hàm của hàm số. Thuật toán hoạt động dựa trên nguyên lý thu hẹp liên tục khoảng chứa nghiệm dựa trên định lý về giá trị trung gian.
+
 ```mermaid
 flowchart TD
-    A[Khởi tạo: a=0, b=1, fa=npv(a), fb=npv(b)] --> B{fa*fb >= 0?}
-    B -->|Yes| C[Trả về midpoint a+b/2, 0 iters]
-    B -->|No| D[Vòng lặp: it=1 đến max_iter]
-    D --> E[c = a + b / 2]
-    E --> F[fc = npv(c)]
-    F --> G[Δ_n = b - a]
-    G --> H{Δ_n < tol OR fc == 0?}
-    H -->|Yes| I[Trả về c, it iters]
-    H -->|No| J{fa * fc < 0?}
-    J -->|Yes| K[b = c, fb = fc]
-    J -->|No| L[a = c, fa = fc]
+    A["Khởi tạo: a=0, b=1, fa=npv(a), fb=npv(b)"] --> B{"fa*fb >= 0?"}
+    B -->|Yes| C["Trả về midpoint a+b/2, 0 iters"]
+    B -->|No| D["Vòng lặp: it=1 đến max_iter"]
+    D --> E["c = a + b / 2"]
+    E --> F["fc = npv(c)"]
+    F --> G["Δ_n = b - a"]
+    G --> H{"Δ_n < tol OR fc == 0?"}
+    H -->|Yes| I["Trả về c, it iters"]
+    H -->|No| J{"fa * fc < 0?"}
+    J -->|Yes| K["b = c, fb = fc"]
+    J -->|No| L["a = c, fa = fc"]
     K --> D
     L --> D
 ```
@@ -66,15 +67,15 @@ Phương pháp này cải tiến dựa trên việc thay thế đạo hàm bằn
 
 ```mermaid
 flowchart TD
-    A[Khởi tạo: x0=0, x1=0.1, m1=min|f'| trên [0,1]] --> B[Vòng lặp it=1..]
-    B --> C[f0=f(x0), f1=f(x1)]
-    C --> D{ |f1-f0| <1e-10? }
-    D -->|Yes| E[Trả x1]
-    D -->|No| F[x2 = x1 - f1*(x1-x0)/(f1-f0)]
-    F --> G[Δ_n = |f1|/m1]
-    G --> H{Δ_n < tol?}
-    H -->|Yes| I[Trả x2]
-    H -->|No| J[x0=x1, x1=x2]
+    A["Khởi tạo: x0=0, x1=0.1, m1=min|f'| trên [0,1]"] --> B["Vòng lặp it=1.."]
+    B --> C["f0=f(x0), f1=f(x1)"]
+    C --> D{"|f1-f0| < 1e-10?"}
+    D -->|Yes| E["Trả x1"]
+    D -->|No| F["x2 = x1 - f1*(x1-x0)/(f1-f0)"]
+    F --> G["Δ_n = |f1|/m1"]
+    G --> H{"Δ_n < tol?"}
+    H -->|Yes| I["Trả x2"]
+    H -->|No| J["x0=x1, x1=x2"]
     J --> B
 ```
 **Giải thích chi tiết thuật toán Dây cung (Secant Method):** Thuật toán dây cung sử dụng hai điểm khởi đầu để tạo ra một cát tuyến cắt trục hoành tại điểm mới $x_2$. Để đánh giá sai số chính xác, hệ thống tính toán trước giá trị cực tiểu của trị tuyệt đối đạo hàm trên lưới điểm để làm cơ sở cho mẫu số trong công thức ước lượng sai số thực tế. Kết quả thực nghiệm cho thấy phương pháp này đạt được sự hội tụ nhanh hơn chia đôi rõ rệt, chỉ mất 6 bước để tìm ra nghiệm chính xác thay vì 18 bước, nhờ vào bậc hội tụ xấp xỉ 1.618.
@@ -83,16 +84,16 @@ flowchart TD
 Đây là phương pháp sử dụng tiếp tuyến của đồ thị hàm số tại điểm lặp hiện tại để dự đoán vị trí của nghiệm. Đây là lựa chọn tối ưu khi hàm số có đạo hàm liên tục và điểm khởi đầu đủ gần nghiệm.
 ```mermaid
 flowchart TD
-    A[Khởi tạo: x0=0.1, m=min|f'|, M=max|f''| trên [0,1]] --> B[Vòng lặp]
-    B --> C[f = npv(x0), f' = npv_derivative(x0)]
-    C --> D{|f'| <1e-10?}
-    D -->|Yes| E[Trả x0]
-    D -->|No| F[x1 = x0 - f/f']
-    F --> G[Δx = |x1-x0|]
-    G --> H[Δ_n = (M/(2m)) * Δx²]
-    H --> I{Δx < tol OR |f| < tol?}
-    I -->|Yes| J[Trả x1]
-    I -->|No| K[x0 = x1]
+    A["Khởi tạo: x0=0.1, m=min|f'|, M=max|f''| trên [0,1]"] --> B["Vòng lặp"]
+    B --> C["f = npv(x0), f' = npv_derivative(x0)"]
+    C --> D{"|f'| < 1e-10?"}
+    D -->|Yes| E["Trả x0"]
+    D -->|No| F["x1 = x0 - f/f'"]
+    F --> G["Δx = |x1-x0|"]
+    G --> H["Δ_n = (M/(2m)) * Δx²"]
+    H --> I{"Δx < tol OR |f| < tol?"}
+    I -->|Yes| J["Trả x1"]
+    I -->|No| K["x0 = x1"]
     K --> B
 ```
 **Giải thích Newton-Raphson:**
@@ -109,17 +110,17 @@ delta_n = (M / (2 * m)) * delta_x**2
 Chúng tôi thiết lập hàm lặp $g(x) = x - f(x)/f'(x)$, biến bài toán tìm nghiệm thành bài toán tìm điểm không đổi của hàm số thông qua các phép biến đổi toán học tương đương.
 ```mermaid
 flowchart TD
-    A[Khởi tạo: x0=0.1, q = max|g'(r)| trên [0,1]] --> B{q >=1?}
-    B -->|Yes| C[Cảnh báo không hội tụ]
-    B -->|No| D[Vòng lặp]
-    D --> E[f=npv(x0), f'=npv_derivative(x0), f''=npv_second(x0)]
-    E --> F{|f'| <1e-10?}
-    F -->|Yes| G[Trả x0]
-    F -->|No| H[x1 = x0 - f/f']
-    H --> I[Δx=|x1-prev|, Δ_n = q/(1-q)*Δx nếu q<1 else Δx]
-    I --> J{Δ_n < tol?}
-    J -->|Yes| K[Trả x1]
-    J -->|No| L[prev=x1, x0=x1]
+    A["Khởi tạo: x0=0.1, q = max|g'(r)| trên [0,1]"] --> B{"q >= 1?"}
+    B -->|Yes| C["Cảnh báo không hội tụ"]
+    B -->|No| D["Vòng lặp"]
+    D --> E["f=npv(x0), f'=npv_derivative(x0), f''=npv_second(x0)"]
+    E --> F{"|f'| < 1e-10?"}
+    F -->|Yes| G["Trả x0"]
+    F -->|No| H["x1 = x0 - f/f'"]
+    H --> I["Δx=|x1-prev|, Δ_n = q/(1-q)*Δx nếu q < 1 else Δx"]
+    I --> J{"Δ_n < tol?"}
+    J -->|Yes| K["Trả x1"]
+    J -->|No| L["prev=x1, x0=x1"]
     L --> D
 ```
 **Giải thích Lặp điểm cố định (g(x)=x - f(x)/f'(x)):**
