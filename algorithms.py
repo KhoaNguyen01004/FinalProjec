@@ -7,10 +7,11 @@ Based on standard numerical analysis textbooks with rigorous convergence conditi
 
 import time
 import numpy as np
+from typing import Sequence
 from utils import npv, npv_derivative, npv_second_derivative, check_fourier_condition, find_min_derivative, find_max_second_derivative, find_max_g_prime
 
 
-def bisection_method(cash_flows, a=0, b=1, tol=1e-5, max_iter=1000):
+def bisection_method(cash_flows: Sequence[float], a: float = 0, b: float = 1, tol: float = 1e-5, max_iter: int = 1000) -> tuple[float, int, float, list[list[float]], list[str]]:
     """
     Bisection method (Chia đôi)
     
@@ -65,8 +66,7 @@ def bisection_method(cash_flows, a=0, b=1, tol=1e-5, max_iter=1000):
     return c, max_iter, (time.time() - start_time)*1000, history, columns
 
 
-
-def secant_method(cash_flows, a=0, b=1, x0=0, x1=0.1, tol=1e-5, max_iter=1000):
+def secant_method(cash_flows: Sequence[float], a: float = 0, b: float = 1, x0: float = 0, x1: float = 0.1, tol: float = 1e-5, max_iter: int = 1000) -> tuple[float, int, float, list[list[float]], list[str]]:
     """
     Secant (Dây cung) - spec: n, x_n, f(x_n), Sai số
     
@@ -89,7 +89,7 @@ def secant_method(cash_flows, a=0, b=1, x0=0, x1=0.1, tol=1e-5, max_iter=1000):
         f1 = npv(x1, cash_flows)
         
         if abs(f1 - f0) < 1e-10:
-            return x1, it, (time.time() - start_time)*1000, history, columns
+            return x1, it, (time.time() - start_time)*1000, history, ["n", "x_n", "f(x_n)", "Δ_n"]
         
         x2 = x1 - f1 * (x1 - x0) / (f1 - f0)
         delta_n = abs(f1) / m1 if m1 > 0 else abs(f1)
@@ -104,8 +104,7 @@ def secant_method(cash_flows, a=0, b=1, x0=0, x1=0.1, tol=1e-5, max_iter=1000):
     return x2, max_iter, (time.time() - start_time)*1000, history, columns
 
 
-
-def newton_raphson_method(cash_flows, a=0, b=1, x0=0.1, tol=1e-5, max_iter=1000):
+def newton_raphson_method(cash_flows: Sequence[float], a: float = 0, b: float = 1, x0: float = 0.2, tol: float = 1e-5, max_iter: int = 1000) -> tuple[float, int, float, list[list[float]], list[str]]:
     """
     Newton-Raphson (Tiếp tuyến) - spec: n, x_n, Δ_n = (M/(2m)) * |Δx|^2
     
@@ -135,7 +134,7 @@ def newton_raphson_method(cash_flows, a=0, b=1, x0=0.1, tol=1e-5, max_iter=1000)
         
         history.append([it+1, x1, delta_n])
         
-        if delta_n < tol:
+        if delta_x < tol or abs(f) < tol:
             return x1, it+1, (time.time() - start_time)*1000, history, columns
         
         x0 = x1
@@ -143,8 +142,7 @@ def newton_raphson_method(cash_flows, a=0, b=1, x0=0.1, tol=1e-5, max_iter=1000)
     return x1, max_iter, (time.time() - start_time)*1000, history, columns
 
 
-
-def fixed_point_iteration(cash_flows, a=0, b=1, x0=0.1, tol=1e-5, max_iter=1000):
+def fixed_point_iteration(cash_flows, a=0, b=1, x0=0.1, tol=1e-5, max_iter=1000) -> tuple[float, int, float, list[list[float]], list[str], bool]:
     """
     Fixed-point iteration (Lặp đơn) - per spec: n, x_n, Sai số = q/(1-q)*|x_n - x_{n-1}|
     
@@ -155,12 +153,14 @@ def fixed_point_iteration(cash_flows, a=0, b=1, x0=0.1, tol=1e-5, max_iter=1000)
     
     Returns:
     --------
-    root, iterations, time_ms, history, columns, convergence_warning
+    root, iterations, time_ms, history, columns, warning
     history columns: ["n", "x_n", "Δ_n"]
     """
     r_test = np.linspace(a, b, 100)
     q = find_max_g_prime(r_test, cash_flows)
-    convergence_warning = q >= 1
+    warning = q >= 1
+    if warning:
+        print("WARNING: Fixed-point may not converge (|g'(r)| >= 1)")
     
     history = []
     columns = ["n", "x_n", "Δ_n"]
@@ -172,7 +172,7 @@ def fixed_point_iteration(cash_flows, a=0, b=1, x0=0.1, tol=1e-5, max_iter=1000)
         f_prime = npv_derivative(x0, cash_flows)
         
         if abs(f_prime) < 1e-10 or not np.isfinite(f_prime):
-            return x0, it, (time.time() - start_time)*1000, history, columns, convergence_warning
+            return x0, it, (time.time() - start_time)*1000, history, columns, warning
         
         x1 = x0 - f / f_prime
         delta_x = abs(x1 - prev_x)
@@ -181,10 +181,10 @@ def fixed_point_iteration(cash_flows, a=0, b=1, x0=0.1, tol=1e-5, max_iter=1000)
         history.append([it, x1, delta_n])
         
         if delta_n < tol:
-            return x1, it, (time.time() - start_time)*1000, history, columns, convergence_warning
+            return x1, it, (time.time() - start_time)*1000, history, columns, warning
         
         prev_x = x1
         x0 = x1
     
-    return x1, max_iter, (time.time() - start_time)*1000, history, columns, convergence_warning
+    return x1, max_iter, (time.time() - start_time)*1000, history, columns, warning
 

@@ -172,14 +172,18 @@ def parse_cash_flow(input_str: str) -> list[float]:
     if not input_str or input_str.strip() == "":
         raise ValueError("Empty input")
     
-    # Normalize: replace thousands separators . or space with nothing, change ; to , for splitting
-    normalized = input_str.replace('.', '').replace(' ', ';').replace(';', ',')
+# Normalize input: remove thousands sep (. or , in numbers), replace ;→,, strip ws, handle mixed
+    # First remove common thousands: .000 → 000, 2,000 → 2000; then unify ;/, to ,
+    normalized = input_str.replace('.', '').replace(',', ';').replace(' ', '').replace(';', ',')
+    print(f"DEBUG parse_cash_flow: input='{input_str}' → normalized='{normalized}'")  # DEBUG
     
     # Split on top-level commas
     parts = [part.strip() for part in normalized.split(',') if part.strip()]
+    print(f"DEBUG parse: parts={parts}")  # DEBUG
     
     try:
         cash_flows = [float(part) for part in parts]
+        print(f"DEBUG parse: cash_flows={cash_flows}, len={len(cash_flows)}")  # DEBUG
         if len(cash_flows) < 2:
             raise ValueError("At least 2 cash flows required")
         return cash_flows

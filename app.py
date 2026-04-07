@@ -108,13 +108,16 @@ else:
 if st.button("Tính IRR", type="primary", width="stretch"):
     try:
         # Use preview if available and valid, else parse
-        if cash_flows_preview is not None:
+        if cash_flows_preview is not None and len(cash_flows_preview) >= 2:
             cash_flows = cash_flows_preview
-        else:
             from utils import parse_cash_flow
             cash_flows = parse_cash_flow(cash_flow_input)
         
-        st.success(f"Sử dụng {len(cash_flows)} dòng tiền ({len(cash_flows)-1} năm)")
+        if len(cash_flows) < 2:
+            raise ValueError("Cần ít nhất 2 dòng tiền")
+        
+        st.success(f"Sử dụng {len(cash_flows)} dòng tiền ({len(cash_flows)-1} năm): { [f'{cf:.0f}' for cf in cash_flows] }")
+
         
         # Check for multiple sign changes
         sign_changes = count_sign_changes(cash_flows)
@@ -166,12 +169,17 @@ if st.button("Tính IRR", type="primary", width="stretch"):
                         cash_flows, a=a, b=b, tol=tolerance, max_iter=max_iterations
                     )
                     convergence_warnings[method_name] = False
+                elif method_name == "Dây cung":
+                    root, iters, time_ms, history, columns = method_func(
+                        cash_flows, a=a, b=b, x0=a, x1=a+0.1, tol=tolerance, max_iter=max_iterations
+                    )
+                    convergence_warnings[method_name] = False
                 elif method_name == "Lặp điểm cố định":
                     root, iters, time_ms, history, columns, warning = method_func(
                         cash_flows, a=a, b=b, x0=a, tol=tolerance, max_iter=max_iterations
                     )
                     convergence_warnings[method_name] = warning
-                else:
+                else:  # Newton-Raphson
                     root, iters, time_ms, history, columns = method_func(
                         cash_flows, a=a, b=b, x0=a, tol=tolerance, max_iter=max_iterations
                     )

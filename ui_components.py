@@ -61,7 +61,7 @@ def render_input_section():
     with col1:
         cash_flow_input = st.text_input(
             "Dòng tiền (phân cách ;):",
-            value="-2.000;400;600;800;1200",
+            value="-2.000;400;600;800;800;1200",
             help="Nhập số âm cho vốn đầu tư năm 0. Dấu chấm (.) cho hàng nghìn, ; phân cách dòng tiền."
         )
     with col2:
