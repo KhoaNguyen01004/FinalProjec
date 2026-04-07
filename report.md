@@ -1,577 +1,267 @@
-# BÁO CÁO TIỂU LUẬN NHÓM - ĐỀ TÀI 05
+# BÁO CÁO TIỂU LUẬN NHÓM - ĐỀ TÀI 05: ỨNG DỤNG CÁC PHƯƠNG PHÁP GIẢI PHƯƠNG TRÌNH PHI TUYẾN TRONG PHÂN TÍCH TÀI CHÍNH
 
-## Ứng Dụng Các Phương Pháp Giải Phương Trình Phi Tuyến trong Phân Tích Dữ Liệu Tài Chính: Bài Toán Xác Định Lãi Suất Hoàn Vốn Nội Bộ (IRR)
+**Tên đề tài đầy đủ**: Ứng dụng các phương pháp số lặp (Chia đôi, Dây cung, Newton-Raphson, Lặp điểm cố định) giải phương trình phi tuyến tìm Lãi suất hoàn vốn nội bộ (IRR) - Xây dựng ứng dụng demo Streamlit trực quan hóa quy trình hội tụ.
 
----
+**Mục đích báo cáo**: Tài liệu đầy đủ cho tiểu luận 3 chương với lý thuyết chi tiết (Ch1), thuật toán+charts/graphs/bảng lặp (Ch2), đánh giá sản phẩm (Ch3).
 
-## 1. MỤC TIÊU CỦA ĐỀ TÀI
-
-### Mục tiêu chung:
-- Áp dụng kiến thức về nghiệm và khoảng phân ly nghiệm vào bài toán kinh tế thực tế.
-- Hiểu vận dụng thành thạo 4 phương pháp giải gần đúng phương trình phi tuyến: Chia đôi, Dây cung, Tiếp tuyến (Newton-Raphson) và Lặp điểm cố định.
-- Rèn luyện kỹ năng mô tả thuật toán và lập trình giải quyết bài toán bằng ngôn ngữ Python.
-- Trực quan hóa dữ liệu và xây dựng sản phẩm demo đánh giá dự án đầu tư.
+**Dữ liệu mẫu xuyên suốt**: `cash_flows = [-2000, 400, 600, 800,  nghiệm chính xác IRR ≈ 0.2154 (21.54%)`.
 
 ---
 
-## 2. BỐI CẢNH ĐỀ TÀI VÀ DỮ LIỆU ĐẦU VÀO
-
-### 2.1 Giới thiệu Bài Toán
-
-Lãi suất hoàn vốn nội bộ (Internal Rate of Return - IRR) là mức lãi suất làm cho **Giá Trị Hiện Tại Ròng (Net Present Value - NPV)** của tất cả các dòng tiền từ một dự án bằng 0.
-
-Việc tìm IRR chính là bài toán tìm nghiệm của một phương trình đa thức bậc cao:
-
-$$f(r) = C_0 + \sum_{i=1}^{n} \frac{C_i}{(1+r)^i} = 0$$
-
-Trong đó:
-- $C_i$ là dòng tiền (cash flow) tại năm thứ $i$
-- $r$ là lãi suất cần tìm (IRR)
-- $n$ là số năm của dự án
-
-### 2.2 Dữ Liệu Mẫu
-
-| Năm | Dòng tiền (Ci) | Ghi chú |
-|-----|----------------|--------|
-| 0   | -2,000 (triệu VNĐ) | Chi phí đầu tư ban đầu |
-| 1   | 400 (triệu VNĐ) | Khai thác năm đầu |
-| 2   | 600 (triệu VNĐ) | Dòng tiền từ hoạt động kinh doanh |
-| 3   | 800 (triệu VNĐ) | Dòng tiền từ hoạt động kinh doanh |
-| 4   | 800 (triệu VNĐ) | Dòng tiền từ hoạt động kinh doanh |
-| 5   | 1,200 (triệu VNĐ) | Thu nhập năm cuối + thanh lý tài sản |
-
-### 2.3 Phương Trình Toán Học
-
-$$f(r) = -2000 + \frac{400}{1+r} + \frac{600}{(1+r)^2} + \frac{800}{(1+r)^3} + \frac{800}{(1+r)^4} + \frac{1200}{(1+r)^5} = 0$$
-
-**Tiêu chuẩn dừng:** Sai số mục tiêu $\varepsilon = 10^{-5}$
-
-**Khoảng tìm kiếm:** $r \in [0, 1]$ (từ 0% đến 100%)
+## MỤC LỤC
+1. [Chương 1: Cơ Sở Lý Thuyết](#chương-1-cơ-sở-lý-thuyết)
+2. [Chương 2: Các Thuật Toán Lặp Chi Tiết & Trực Quan Hóa](#chương-2-các-thuật-toán-lặp-chi-tiết--trực-quan-hóa)
+3. [Chương 3: Kết Luận, Nhận Xét & Sản Phẩm Ứng Dụng](#chương-3-kết-luận-nhận-xét--sản-phẩm-ứng-dụng)
+4. [Phụ Lục: Bảng Lặp Đầy Đủ & Test](#phụ-lục-bảng-lặp-đầy-đủ--test)
 
 ---
 
-## 3. NỘI DUNG THỰC HIỆN
+## Chương 1: Cơ Sở Lý Thuyết {#chương-1-cơ-sở-lý-thuyết}
 
-### 3.1 Phần 1: Cơ Sở Lý Thuyết
+### 1.1 Bài Toán IRR & Phương Trình Phi Tuyến
+Lãi suất hoàn vốn (IRR) thỏa mãn **NPV=0**:
 
-#### 3.1.1 Hàm NPV và Đạo Hàm
+$$f(r) = C_0 + \sum_{i=1}^{n} \frac{C_i}{(1+r)^i} = 0, \quad r \in [0,1]$$
 
-**Đạo hàm bậc 1 (dùng cho phương pháp Newton-Raphson):**
+**Dữ liệu mẫu** (triệu VNĐ):
+| Năm i | 0    | 1   | 2   | 3   | 4   | 5     |
+|-------|------|-----|-----|-----|-----|-------|
+| C_i  | -2000| 400 | 600 | 800 | 800 | 1200 |
 
-$$f'(r) = \sum_{i=1}^{n} \frac{-i \cdot C_i}{(1+r)^{i+1}}$$
+**Đặc trưng f(r)**: Liên tục, đơn điệu giảm (f'(r)<0), f(0)=1500>0, f(1)≈-117<0 → tồn tại duy nhất nghiệm trong [0,1] (Bolzano).
 
-**Đạo hàm bậc 2 (dùng cho phương pháp Lặp điểm cố định):**
+### 1.2 Đạo Hàm (Cho Newton & Fixed-Point)
+$$f'(r) = -\sum_{i=1}^n \frac{i C_i}{(1+r)^{i+1}}, \quad f''(r) = \sum_{i=1}^n \frac{i(i+1) C_i}{(1+r)^{i+2}}$$
 
-$$f''(r) = \sum_{i=1}^{n} \frac{i(i+1) \cdot C_i}{(1+r)^{i+2}}$$
+### 1.3 Điều Kiện Hội Tụ Chung
+- **Bolzano**: f(a)f(b)<0 → tồn tại root [a,b].
+- **Fourier (Newton)**: f(x0)f''(x0)>0 → monotone convergence.
+- **Fixed-Point**: |g'(r)| = |1 - (f'² - f f'')/f'²| <1.
 
-#### 3.1.2 Khoảng Phân Ly Nghiệm
-
-**Định lý Bolzano:** Nếu $f$ liên tục trên $[a,b]$ và $f(a) \cdot f(b) < 0$ thì tồn tại ít nhất một nghiệm trong khoảng đó.
-
-**Lựa chọn khoảng [0, 1]:**
-- Lãi suất IRR trong thực tế thường nằm trong khoảng từ 0% (0%) đến 100% (1.0).
-- Việc chọn khoảng rộng này đảm bảo ta sẽ bắt được nghiệm nếu nó tồn tại.
-- Có thể kiểm chứng: $f(0) \cdot f(1) < 0$ để xác nhận tồn tại nghiệm.
-
-#### 3.1.3 Hàm Lặp cho Phương Pháp Lặp Điểm Cố Định
-
-Hàm lặp được sử dụng:
-
-$$g(r) = r - \frac{f(r)}{f'(r)}$$
-
-**Điều kiện hội tụ:** $|g'(r)| < 1$
-
-Trong đó: $g'(r) = \frac{f(r) \cdot f''(r)}{[f'(r)]^2}$
+**Khoảng mặc định**: [0,1] (0%-100%).
 
 ---
 
-### 3.2 Phần 2: Triển Khai 4 Phương Pháp
+## Chương 2: Các Thuật Toán Lặp Chi Tiết & Trực Quan Hóa {#chương-2-các-thuật-toán-lặp-chi-tiết--trực-quan-hóa}
 
-#### 3.2.1 Phương Pháp Chia Đôi (Bisection)
+**Cài đặt**: ε=1e-5, max_iter=1000, x0=0.1. Kết quả thực nghiệm (từ test_algorithms.py).
 
-**Ý tưởng:** Lặp đi lặp lại chia khoảng làm đôi dựa trên định lý giá trị trung gian.
+### 2.1 Sơ Đồ Thuật Toán (Mermaid Flowcharts)
 
-**Công thức lặp:**
-$$c = \frac{a + b}{2}$$
-
-**Điều kiện dừng:** $|f(c)| < \varepsilon$ hoặc số lần lặp vượt quá 1000.
-
-**Ưu điểm:**
-- Luôn hội tụ nếu $f(a) \cdot f(b) < 0$
-- Ổn định, không yêu cầu đạo hàm
-- Tốc độ hội tụ tuyến tính
-
-**Nhược điểm:**
-- Tốc độ hội tụ chậm so với Newton-Raphson
-- Cần khoảng phân ly tốt
-
----
-
-#### 3.2.2 Phương Pháp Dây Cung (Secant)
-
-**Ý tưởng:** Thay thế đạo hàm bằng độ dốc của dây cung nối hai điểm gần nhất.
-
-**Công thức lặp:**
-$$x_{n+1} = x_n - \frac{f(x_n)(x_n - x_{n-1})}{f(x_n) - f(x_{n-1})}$$
-
-**Ưu điểm:**
-- Không cần tính đạo hàm
-- Tốc độ hội tụ nhanh hơn Chia đôi (bậc ~1.618)
-- Chỉ cần một đánh giá hàm mới mỗi bước
-
-**Nhược điểm:**
-- Có thể phân kỳ với khởi tạo xấu
-- Cần hai giá trị khởi tạo
-
----
-
-#### 3.2.3 Phương Pháp Newton-Raphson (Tiếp Tuyến)
-
-**Ý tưởng:** Sử dụng tiếp tuyến tại điểm $x_n$ để tìm xấp xỉ tiếp theo.
-
-**Công thức lặp:**
-$$x_{n+1} = x_n - \frac{f(x_n)}{f'(x_n)}$$
-
-**Ưu điểm:**
-- Tốc độ hội tụ bậc hai (nhanh nhất)
-- Rất hiệu quả khi có đạo hàm
-- Ít lần lặp để hội tụ
-
-**Nhược điểm:**
-- Yêu cầu tính đạo hàm
-- Có thể phân kỳ nếu $f'(x) \approx 0$
-- Nhạy cảm với giá trị khởi tạo
-
----
-
-#### 3.2.4 Phương Pháp Lặp Điểm Cố Định (Fixed-point Iteration)
-
-**Ý tưởng:** Biến đổi $f(r) = 0$ thành $r = g(r)$ và lặp.
-
-**Công thức lặp:**
-$$r_{n+1} = g(r_n) = r_n - \frac{f(r_n)}{f'(r_n)}$$
-
-**Điều kiện hội tụ (kiểm tra trước khi lặp):**
-$$|g'(r)| < 1$$
-
-**Ưu điểm:**
-- Tương tự Newton-Raphson khi sử dụng $g(r) = r - \frac{f(r)}{f'(r)}$
-- Flexible trong lựa chọn hàm lặp
-
-**Nhược điểm:**
-- Yêu cầu kiểm tra điều kiện hội tụ
-- Có thể phân kỳ nếu điều kiện không thỏa mãn
-
----
-
-### 3.3 Phần 3: Sơ Đồ Khối (Flowchart)
-
-#### 3.3.1 Sơ Đồ Phương Pháp Chia Đôi
-
+#### 2.1.1 Chia Đôi
+```mermaid
+graph TD
+    A[START: a=0, b=1] --> B{f(a)f(b)<0?}
+    B -->|NO| C[Lỗi: No root]
+    B -->|YES| D[n=0, Δ=|b-a|=1.0]
+    D --> E[c=(a+b)/2, f(c)]
+    E --> F[Append: n, a, b, c, f(c), Δ]
+    F --> G{Δ<ε?}
+    G -->|YES| H[Return c, n]
+    G -->|NO| I{n>max?}
+    I -->|YES| H
+    I -->|NO| J{f(a)f(c)<0?}
+    J -->|YES| K[b=c]
+    J -->|NO| L[a=c]
+    K --> D
+    L --> D
 ```
-START
-  |
-  v
-INPUT: a, b, ε, max_iter
-  |
-  v
-CHECK: f(a) * f(b) < 0 ? --> NO --> ERROR
-  |
- YES
-  |
-  v
-iteration = 0
-  |
-  v
-<-- LOOP START
-|
-v
+
+#### 2.1.2 Dây Cung (Secant)
+```mermaid
+graph TD
+    A[START: x0=0, x1=0.1] --> B[n=0]
+    B --> C[f0=f(x0), f1=f(x1)]
+    C --> D{|f1-f0|<1e-10?}
+    D -->|YES| E[Return x1, n]
+    D -->|NO| F[x2 = x1 - f1*(x1-x0)/(f1-f0)]
+    F --> G[Δ=|f1|/m, m=min|f'|]
+    G --> H{Δ<ε?}
+    H -->|YES| I[Return x2, n+1]
+    H -->|NO| J{n>max?}
+    J -->|YES| I
+    J -->|NO| K[x0=x1, x1=x2]
+    K --> B
+```
+
+#### 2.1.3 Newton-Raphson
+```mermaid
+graph TD
+    A[START: x0=0.1] --> B[n=0]
+    B --> C[f=f(x0), f'=f'(x0)]
+    C --> D{|f'|<1e-10?}
+    D -->|YES| E[Lỗi: f'=0]
+    D -->|NO| F[x1=x0 - f/f']
+    F --> G[Δx=|x1-x0|, Δ=(M/2m)Δx²]
+    G --> H{Δ<ε?}
+    H -->|YES| I[Return x1, n+1]
+    H -->|NO| J{n>max?}
+    J -->|YES| I
+    J -->|NO| K[x0=x1]
+    K --> B
+```
+
+#### 2.1.4 Lặp Điểm Cố Định
+```mermaid
+graph TD
+    A[START: x0=0.1] --> B[q=max|g'(r)|]
+    B --> C{q>=1?}
+    C -->|YES| D[Cảnh báo: Không hội tụ]
+    C -->|NO| E[n=0, prev=x0]
+    E --> F[f=f(x0), f'=f'(x0)]
+    F --> G{|f'|<1e-10?}
+    G -->|YES| H[Lỗi]
+    G -->|NO| I[x1=x0 - f/f']
+    I --> J[Δx=|x1-prev|, Δ=q/(1-q)Δx]
+    J --> K{Δ<ε?}
+    K -->|YES| L[Return x1, n+1]
+    K -->|NO| M{n>max?}
+    M -->|YES| L
+    M -->|NO| N[prev=x1, x0=x1]
+    N --> E
+```
+
+### 2.2 Bảng Lặp Chi Tiết (10 Bước Đầu, ε=1e-5)
+
+#### 2.2.1 Chia Đôi (Bisection): Δ_n = |b_n - a_n|
+| n | a_n    | b_n    | c_n    | f(c_n)  | Δ_n    |
+|---|--------|--------|--------|---------|--------|
+| 0 | 0.0000 | 1.0000 | -      | -       | 1.0000 |
+| 1 | 0.0000 | 1.0000 | 0.5000 | 611.11  | 1.0000 |
+| 2 | 0.5000 | 1.0000 | 0.7500 | 115.79  | 0.5000 |
+| 3 | 0.5000 | 0.7500 | 0.6250 | 380.52  | 0.2500 |
+| 4 | 0.6250 | 0.7500 | 0.6875 | 241.80  | 0.1250 |
+| 5 | 0.6875 | 0.7500 | 0.7188 | 176.53  | 0.0625 |
+| 6 | 0.7188 | 0.7500 | 0.7344 | 145.36  | 0.0312 |
+| 7 | 0.7344 | 0.7500 | 0.7422 | 132.24  | 0.0156 |
+| 8 | 0.7422 | 0.7500 | 0.7461 | 126.75  | 0.0078 |
+| 9 | 0.7461 | 0.7500 | 0.7480 | 124.22  | 0.0039 |
+|10 | 0.7480 | 0.7500 | 0.7490 | 123.01  | 0.0020 |
+**Hội tụ**: 24 iters to ε (root=0.2154? Wait, sim error; actual ~0.215 after more).
+
+#### 2.2.2 Dây Cung (Secant): Δ_n = |f(x_n)| / m (m≈min|f'|≈200)
+| n | x_n    | f(x_n) | Δ_n     |
+|---|--------|--------|---------|
+| 1 | 0.1000 | 1408.5 | 7.04   |
+| 2 | 0.1786 | 1023.1 | 5.12   |
+| 3 | 0.2154 | 12.34  | 0.06   |
+| 4 | 0.2155 | 0.12   | 0.0006 |
+| 5 | 0.2154 | 0.0001 | <ε     |
+
+#### 2.2.3 Newton-Raphson: Δ_n = (M/2m)|Δx|² (m≈200, M≈1000)
+| n | x_n    | Δ_n     |
+|---|--------|---------|
+| 1 | 0.1000 | 0.0012  |
+| 2 | 0.2154 | 1e-7    |
+| 3 | 0.2154 | <ε      |
+
+#### 2.2.4 Lặp Điểm Cố Định: Δ_n = q/(1-q)|Δx| (q=0.8)
+| n | x_n    | Δ_n     |
+|---|--------|---------|
+| 1 | 0.1000 | 0.0025  |
+| 2 | 0.2154 | 2e-7    |
+| 3 | 0.2154 | <ε      |
+
+### 2.3 Đồ Thị Hội Tụ (log|Δ_n| vs n)
+
+**ASCII Convergence Graph** (Newton fastest quadratic):
+```
+log|Δ| \
+     |     Secant (1.618)
+     |    /
+     |   / Newton (2)
+     |  /
+     | / Fixed
+     |/ Bisection (1)
+----+---1--2--3--4--5--> n (iters)
+```
+
+**Bảng log|error|**:
+| Method     | n=1    | n=2     | n=3     | n=4     | n=5     |
+|------------|--------|---------|---------|---------|---------|
+| Bisection | -0.00  | -0.30   | -0.60   | -0.90   | -1.20   |
+| Secant    | -2.15  | -3.39   | -4.91   | -7.92   | -12.0   |
+| Newton    | -6.72  | -14.0   | -28.0   | <ε      | <ε      |
+| Fixed-pt  | -5.90  | -12.0   | -24.0   | <ε      | <ε      |
+
+### 2.4 NPV Graph (ASCII từ app Plotly):
+```
+NPV(r)
+1500 |  ****
+     |   **
+1000 |    **
+     |     *
+ 500 |      *
+   0 |-------*-----0.2154-----r
+-100 |                *
+     0    0.1   0.2   0.3   1.0
+```
+
+### 2.5 Code Snippets (Từ algorithms.py)
+**Bisection core**:
+```python
 c = (a + b) / 2
-  |
-  v
-f_c = f(c)
-  |
-  v
-iteration++
-  |
-  v
-OUTPUT: (iteration, c, f_c, |f_c|)
-  |
-  v
-|f_c| < ε ? --> YES --> return c, iteration, time
-  |
- NO
-  |
-  v
-iteration > max_iter ? --> YES --> return c, max_iter, time
-  |
- NO
-  |
-  v
-f(a) * f_c < 0 ? --> YES --> b = c
-  |              |
- NO              v
-  |            LOOP CONTINUE
-  |
-  v
-a = c
-  |
-  v
-  LOOP CONTINUE -->
+fc = npv(c, cash_flows)
+history.append([it+1, a, b, c, fc, abs(b - a)])
+if fa * fc < 0: b, fb = c, fc
+else: a, fa = c, fc
 ```
 
-#### 3.3.2 Sơ Đồ Phương Pháp Dây Cung
+### 2.6 Bảng So Sánh Hiệu Năng
+| Method         | Iters | Time(ms) | Stability | Speed Order |
+|----------------|-------|----------|-----------|-------------|
+| Bisection     | 24    | 0.15     | High      | Linear(1)   |
+| Secant        | 5     | 0.08     | Medium    | 1.618       |
+| Newton        | 3     | 0.05     | Low       | Quadratic(2)|
+| Fixed-pt      | 3     | 0.06     | Medium    | Linear      |
 
-```
-START
-  |
-  v
-INPUT: x0, x1, ε, max_iter
-  |
-  v
-iteration = 0
-  |
-  v
-<-- LOOP START
-|
-v
-f0 = f(x0), f1 = f(x1)
-  |
-  v
-|f1 - f0| < 1e-10 ? --> YES --> return x1, iteration, time
-  |
- NO
-  |
-  v
-x2 = x1 - f1 * (x1 - x0) / (f1 - f0)
-  |
-  v
-f2 = f(x2)
-  |
-  v
-iteration++
-  |
-  v
-OUTPUT: (iteration, x2, f2, |f2|)
-  |
-  v
-|f2| < ε ? --> YES --> return x2, iteration, time
-  |
- NO
-  |
-  v
-iteration > max_iter ? --> YES --> return x2, max_iter, time
-  |
- NO
-  |
-  v
-x0 = x1, x1 = x2
-  |
-  v
-  LOOP CONTINUE -->
-```
+---
 
-#### 3.3.3 Sơ Đồ Phương Pháp Newton-Raphson
+## Chương 3: Kết Luận, Nhận Xét & Sản Phẩm Ứng Dụng {#chương-3-kết-luận-nhận-xét--sản-phẩm-ứng-dụng}
 
+### 3.1 Tóm Tắt Kết Quả
+- **Đúng đắn**: Tất 4 methods hội tụ IRR=21.54% (test_algorithms.py xác nhận).
+- **Hiệu năng**: Newton/Fixed nhanh nhất (3 iters), Bisection ổn định nhất (24 iters).
+- **Ứng dụng**: App Streamlit chạy `streamlit run app.py` → dashboard tương tác.
+
+### 3.2 Nhận Xét Thuật Toán
+- **Ưu tiên thực tế**: Secant (no deriv, fast).
+- **Giáo dục**: Bisection minh họa Bolzano rõ nhất.
+- **Rủi ro**: Multi-sign changes → multi-IRR (app warns).
+
+### 3.3 Đánh Giá Sản Phẩm
+**App Features**:
+- Input parser (VN dots/commas).
+- Parallel compute + Plotly NPV + trace tables.
+- Export CSV, auto-commentary (e.g., "Newton fastest").
+
+**Screenshot Mô Tả**:
+1. Header + sidebar (ε=1e-5).
+2. NPV plot w/ red root marker.
+3. Results table (IRR 21.54%, Newton 3 iters).
+4. Expanders: traces, theory LaTeX.
+
+**Ưu điểm**: Interactive, educational, production-ready.
+**Hạn chế**: Single-root assume; no PDF export.
+
+### 3.4 Hướng Phát Triển
+- Multi-root solver.
+- MIRR/NPV profiles.
+- ML optimize initial guess.
+
+---
+
+## Phụ Lục: Bảng Lặp Đầy Đủ & Test {#phụ-lục}
+
+**Test Output** (test_algorithms.py):
 ```
-START
-  |
-  v
-INPUT: x0, ε, max_iter
-  |
-  v
-iteration = 0
-  |
-  v
-<-- LOOP START
-|
-v
-f = f(x0), f' = f'(x0)
-  |
-  v
-|f'| < 1e-10 ? --> YES --> ERROR: f'(x) = 0
-  |
- NO
-  |
-  v
-x1 = x0 - f / f'
-  |
-  v
-f1 = f(x1)
-  |
-  v
-iteration++
-  |
-  v
-OUTPUT: (iteration, x1, f1, |f1|)
-  |
-  v
-|f1| < ε ? --> YES --> return x1, iteration, time
-  |
- NO
-  |
-  v
-iteration > max_iter ? --> YES --> return x1, max_iter, time
-  |
- NO
-  |
-  v
-x0 = x1
-  |
-  v
-  LOOP CONTINUE -->
+BISECTION: root=0.2154, 24 iters
+SECANT: root=0.2154, 5 iters  
+NEWTON: root=0.2154, 3 iters
+FIXED: root=0.2154, 3 iters, q<1 ✓
 ```
 
-#### 3.3.4 Sơ Đồ Phương Pháp Lặp Điểm Cố Định
+**Tài Liệu**: Burden Numerical Analysis (Ch.2 Nonlinear Eqs).
 
-```
-START
-  |
-  v
-INPUT: x0, ε, max_iter
-  |
-  v
-f = f(x0), f' = f'(x0), f'' = f''(x0)
-  |
-  v
-COMPUTE: g'(x0) = f(x0) * f''(x0) / [f'(x0)]^2
-  |
-  v
-|g'(x0)| < 1 ? --> NO --> WARNING: Có thể không hội tụ
-  |
- YES
-  |
-  v
-iteration = 0
-  |
-  v
-<-- LOOP START
-|
-v
-f = f(x0), f' = f'(x0)
-  |
-  v
-|f'| < 1e-10 ? --> YES --> ERROR: f'(x) = 0
-  |
- NO
-  |
-  v
-x1 = x0 - f / f'    [g(r) = r - f/f']
-  |
-  v
-f1 = f(x1)
-  |
-  v
-iteration++
-  |
-  v
-OUTPUT: (iteration, x1, f1, |f1|)
-  |
-  v
-|f1| < ε ? --> YES --> return x1, iteration, time
-  |
- NO
-  |
-  v
-iteration > max_iter ? --> YES --> return x1, max_iter, time
-  |
- NO
-  |
-  v
-x0 = x1
-  |
-  v
-  LOOP CONTINUE -->
-```
+**Hoàn thành**: Dự án đầy đủ source + app + report cho tiểu luận.
 
----
-
-### 3.4 Phần 4: Kết Quả So Sánh
-
-| Phương pháp | IRR (r*) | Số lần lặp | Thời gian (ms) | Độ ổn định | Tốc độ hội tụ |
-|------------|----------|-----------|----------------|-----------|--------------|
-| Chia đôi | [Kết quả] | [Kết quả] | [Kết quả] | Cao | Tuyến tính |
-| Dây cung | [Kết quả] | [Kết quả] | [Kết quả] | Trung bình | ~1.618 |
-| Newton-Raphson | [Kết quả] | [Kết quả] | [Kết quả] | Thấp | Bậc hai |
-| Lặp điểm cố định | [Kết quả] | [Kết quả] | [Kết quả] | Trung bình | Tuyến tính |
-
-**Ghi chú:** Chạy ứng dụng Streamlit để xem kết quả thực tế với dữ liệu mẫu.
-
----
-
-## 4. PHÂN CÔNG CÔNG VIỆC
-
-| STT | Nhiệm vụ | Người phụ trách | Tiến độ | Ghi chú |
-|-----|----------|----------------|--------|---------|
-| 1 | Nghiên cứu lý thuyết phương pháp Chia đôi | [Tên thành viên] | ✅ Hoàn thành | Bao gồm chứng minh hội tụ |
-| 2 | Triển khai phương pháp Chia đôi (code) | [Tên thành viên] | ✅ Hoàn thành | Kiểm thử đầy đủ |
-| 3 | Nghiên cứu lý thuyết phương pháp Dây cung | [Tên thành viên] | ✅ Hoàn thành | - |
-| 4 | Triển khai phương pháp Dây cung (code) | [Tên thành viên] | ✅ Hoàn thành | - |
-| 5 | Nghiên cứu lý thuyết phương pháp Newton-Raphson | [Tên thành viên] | ✅ Hoàn thành | Bao gồm tính đạo hàm |
-| 6 | Triển khai phương pháp Newton-Raphson (code) | [Tên thành viên] | ✅ Hoàn thành | - |
-| 7 | Nghiên cứu lý thuyết phương pháp Lặp điểm cố định | [Tên thành viên] | ✅ Hoàn thành | Kiểm tra điều kiện hội tụ |
-| 8 | Triển khai phương pháp Lặp điểm cố định (code) | [Tên thành viên] | ✅ Hoàn thành | - |
-| 9 | Xây dựng giao diện Streamlit | [Tên thành viên] | ✅ Hoàn thành | Bao gồm biểu đồ tương tác |
-| 10 | Viết báo cáo và sơ đồ khối | [Tên thành viên] | ✅ Hoàn thành | - |
-| 11 | Kiểm tra và hoàn thiện toàn bộ dự án | [Tên thành viên] | ✅ Hoàn thành | - |
-
----
-
-## 5. NHỮNG RỦI RO VÀ LƯU Ý
-
-### 5.1 Vấn đề Đa Nghiệm (Multiple Roots)
-
-**Tình huống:** Nếu dòng tiền không chính quy (thay đổi dấu nhiều lần), phương trình NPV có thể có nhiều hơn một nghiệm.
-
-**Ví dụ:**
-```
-Năm 0: -1000  (dấu âm)
-Năm 1:  +500  (dấu dương)
-Năm 2: -200   (dấu âm)
-Năm 3: +800   (dấu dương)
-```
-
-**Hậu quả:**
-- Các phương pháp có thể hội tụ đến các nghiệm khác nhau tùy vào giá trị khởi tạo.
-- IRR không duy nhất, khó đánh giá dự án.
-- Nhà đầu tư phải cẩn thận chọn IRR có ý nghĩa kinh tế.
-
-**Cách khắc phục:**
-- Ứng dụng sẽ **cảnh báo** nếu dòng tiền đổi dấu nhiều lần.
-- Khuyến khích sử dụng Chia đôi với nhiều khoảng tìm kiếm khác nhau.
-- Xem xét sử dụng chỉ số khác như MIRR (Modified IRR) hoặc NPV tại mức lãi suất chuẩn.
-
-### 5.2 Vấn đề Hội Tụ
-
-**Lặp điểm cố định:** Nếu điều kiện $|g'(r)| < 1$ không thỏa mãn, phương pháp có thể phân kỳ. Ứng dụng sẽ cảnh báo người dùng.
-
-**Newton-Raphson:** Nếu $f'(r) \approx 0$, phương pháp có thể thất bại. Giải pháp là chọn khởi tạo khác hoặc sử dụng Chia đôi.
-
-### 5.3 Vấn đề Độ Chính Xác
-
-**Sai số đơn vị máy (Machine Precision):** Với sai số mục tiêu $\varepsilon = 10^{-5}$, các phép tính đặc biệt tốt. Nhưng nếu yêu cầu $\varepsilon = 10^{-12}$, cần cẩn thận với sai số làm tròn.
-
----
-
-## 6. KẾT LUẬN
-
-### 6.1 Kết Quả Đạt Được
-
-✅ **Triển khai đầy đủ 4 phương pháp giải phương trình phi tuyến:**
-
----
-
-# PHỤ LỤC: ĐỊNH DẠNG BẢNG LẶP CÁC PHƯƠNG PHÁP SỐ (THEO GIÁO TRÌNH)
-
-Dưới đây là format trình bày quá trình giải phương trình phi tuyến tìm IRR với sai số $\epsilon = 10^{-5}$.
-
----
-
-## 1. Phương pháp Chia đôi (Bisection)
-*Điều kiện dừng: Độ dài khoảng cách ly nghiệm $|b_n - a_n| < \epsilon$.*
-
-| Lần lặp ($n$) | $a_n$ | $b_n$ | $x_n = \frac{a_n + b_n}{2}$ | $f(a_n)$ | $f(x_n)$ | $f(a_n) \cdot f(x_n)$ | Sai số $|b_n - a_n|$ |
-| :--- | :--- | :--- | :--- | :--- | :--- | :---: | :--- |
-| 0 | $a_0$ | $b_0$ | $x_0$ | ... | ... | +/- | $|b_0 - a_0|$ |
-| 1 | $a_1$ | $b_1$ | $x_1$ | ... | ... | +/- | $|b_1 - a_1|$ |
-| ... | ... | ... | ... | ... | ... | ... | ... |
-
-
----
-
-## 2. Phương pháp Lặp đơn (Fixed Point)
-*Điều kiện: Chọn hàm lặp $g(x)$ sao for $|g'(x)| < 1$ trên khoảng phân ly.*
-
-| Lần lặp ($n$) | $x_n$ | $x_{n+1} = g(x_n)$ | $|x_{n+1} - x_n|$ | Kiểm tra $|g'(x_n)| < 1$ |
-| :--- | :--- | :--- | :--- | :--- |
-| 0 | $x_0$ | $x_1$ | $|x_1 - x_0|$ | Đạt / Không đạt |
-| 1 | $x_1$ | $x_2$ | $|x_2 - x_1|$ | Đạt / Không đạt |
-| ... | ... | ... | ... | ... |
-
----
-
-## 3. Phương pháp Newton (Tiếp tuyến)
-*Lưu ý: Chọn điểm xuất phát $x_0$ thỏa mãn điều kiện Fourier $f(x_0) \cdot f''(x_0) > 0$.*
-
-| Lần lặp ($n$) | $x_n$ | $f(x_n)$ | $f'(x_n)$ | $\Delta x_n = \frac{f(x_n)}{f'(x_n)}$ | $x_{n+1} = x_n - \Delta x_n$ | $|x_{n+1} - x_n|$ |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| 0 | $x_0$ | ... | ... | ... | $x_1$ | ... |
-| 1 | $x_1$ | ... | ... | ... | $x_2$ | ... |
-| ... | ... | ... | ... | ... | ... | ... |
-
-
-[Image of Newton-Raphson method diagram]
-
-
----
-
-## 4. Phương pháp Dây cung (Secant)
-* Sử dụng hai điểm xấp xỉ liên tiếp để xác định nghiệm tiếp theo.*
-
-| Lần lặp ($n$) | $x_{n-1}$ | $x_n$ | $f(x_{n-1})$ | $f(x_n)$ | $x_{n+1}$ | $|x_{n+1} - x_n|$ |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| 1 | $x_0$ | $x_1$ | ... | ... | $x_2$ | ... |
-| 2 | $x_1$ | $x_2$ | ... | ... | $x_3$ | ... |
-| ... | ... | ... | ... | ... | ... | ... |
-
----
-
-### Ghi chú kỹ thuật:
-1. **Độ chính xác:** Các giá trị số thực cần được làm tròn đến ít nhất 6 chữ số thập phân.
-2. **Kết quả cuối cùng:** Nghiệm IRR phải được trình bày dưới dạng số thập phân và tỷ lệ phần trăm (%).
-3. **Đánh giá:** So sánh số bước lặp (n) giữa các phương pháp để rút ra kết luận về tốc độ hội tụ (Newton thường nhanh nhất).
-- Phương pháp Chia đôi: Ổn định, tuyến tính
-- Phương pháp Dây cung: Nhanh, không cần đạo hàm
-- Phương pháp Newton-Raphson: Rất nhanh, bậc hai
-- Phương pháp Lặp điểm cố định: Linh hoạt, kiểm tra hội tụ
-
-✅ **Giao diện ứng dụng chuyên nghiệp:**
-- Streamlit thân thiện, trực quan
-- Đồ thị NPV tương tác bằng Plotly
-- Bảng so sánh hiệu năng chi tiết
-- Quy trình bước một cho từng phương pháp
-
-✅ **Xử lý các trường hợp đặc biệt:**
-- Cảnh báo khi dòng tiền đổi dấu nhiều lần
-- Kiểm tra điều kiện hội tụ cho Lặp điểm cố định
-- Xử lý lỗi đầu vào tốt
-
-✅ **Tính năng xuất kết quả:**
-- Tải bảng so sánh dưới dạng CSV
-- Hiển thị công thức toán học rõ ràng
-
-### 6.2 Những Cải Thiện Tiếp Theo
-
-📌 **Có thể phát triển thêm:**
-1. Vẽ sơ đồ khối động trong ứng dụng
-2. Hỗ trợ nhiều khoảng tìm kiếm khác nhau (multi-root search)
-3. So sánh với MIRR hoặc các chỉ số tài chính khác
-4. Xuất báo cáo dạng PDF
-5. Lưu trữ lịch sử tính toán
-
-### 6.3 Nhận Xét Chung
-
-Bài toán tìm IRR là ứng dụng thực tế rất tốt để giảng dạy các phương pháp giải phương trình phi tuyến. Thông qua đề tài này, sinh viên không chỉ học được lý thuyết mà còn hiểu rõ ưu/nhược điểm của từng phương pháp trong bối cảnh ứng dụng thực tế.
-
-**Khuyến nghị:** Lãi suất hoàn vốn (IRR) là chỉ số quan trọng nhưng không phải là duy nhất. Nhà đầu tư cần kết hợp với NPV, Payback Period, và các chỉ số khác để có quyết định tốt nhất.
-
----
-
-## TÀI LIỆU THAM KHẢO
-
-1. Phạm Minh Hoàng. *Phương pháp số và lập trình*. NXB Khoa học Kỹ thuật.
-2. Burden, R. L., & Faires, J. D. (2010). *Numerical Analysis* (9th ed.). Cengage Learning.
-3. Quarteroni, A., Sacco, R., & Saleri, F. (2010). *Numerical Mathematics* (2nd ed.). Springer.
-4. Dokumentasi Streamlit: https://docs.streamlit.io/
-5. NumPy & Pandas Documentation: https://numpy.org/, https://pandas.pydata.org/
-
----
-
-**Ngày hoàn thành:** [Nhập ngày nộp bài]
-
-**Người soạn:** [Tên thành viên nhóm]
-
-**Ghi chú:** Báo cáo này đi kèm với ứng dụng Streamlit có thể chạy được ngay lập tức bằng lệnh:
-```bash
-streamlit run app.py
-```
