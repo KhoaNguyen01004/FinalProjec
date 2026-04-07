@@ -9,10 +9,10 @@
 ---
 
 ## MỤC LỤC
-1. [Chương 1: Cơ Sở Lý Thuyết](#chương-1-cơ-sở-lý-thuyết-chương-1-cơ-sở-lý-thuyết)
-2. [Chương 2: Các Thuật Toán Lặp Chi Tiết & Trực Quan Hóa](#chương-2-các-thuật-toán-lặp-chi-tiết--trực-quan-hóa-chương-2-các-thuật-toán-lặp-chi-tiết--trực-quan-hóa)
-3. [Chương 3: Kết Luận, Nhận Xét & Sản Phẩm Ứng Dụng](#chương-3-kết-luận-nhận-xét--sản-phẩm-ứng-dụng-chương-3-kết-luận-nhận-xét--sản-phẩm-ứng-dụng)
-4. [Phụ Lục: Bảng Lặp Đầy Đủ & Test](#phụ-lục-bảng-lặp-đầy-đủ--test-phụ-lục)
+1. [Chương 1: Cơ Sở Lý Thuyết](#chương-1-cơ-sở-lý-thuyết)
+2. [Chương 2: Các Thuật Toán Lặp Chi Tiết & Trực Quan Hóa](#chương-2-các-thuật-toán-lặp-chi-tiết--trực-quan-hóa)
+3. [Chương 3: Kết Luận, Nhận Xét & Sản Phẩm Ứng Dụng](#chương-3-kết-luận-nhận-xét--sản-phẩm-ứng-dụng)
+4. [Phụ Lục: Bảng Lặp Đầy Đủ & Test](#phụ-lục)
 
 **Chú ý**: Links hoạt động đúng với anchors {#id} dưới mỗi heading.
 
