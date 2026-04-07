@@ -102,14 +102,10 @@ flowchart TD
     J -->|NO| K["x0=x1"]
     K --> B
 ```
-</xai:function_call)
 
 
 
 
-
-<xai:function_call name="edit_file">
-<parameter name="path">d:/SIU/PhuongPhapSo/FinalProjec/TODO.md
 
 #### 2.1.4 Lặp Điểm Cố Định
 ```mermaid
@@ -130,11 +126,6 @@ flowchart TD
     M -->|NO| N["prev=x1, x0=x1"]
     N --> E
 ```
-</xai:function_call > 
-
-<xai:function_call name="edit_file">
-<parameter name="path">d:/SIU/PhuongPhapSo/FinalProjec/TODO.md
-
 ### 2.2 Bảng Lặp Chi Tiết (10 Bước Đầu, ε=1e-5)
 
 #### 2.2.1 Chia Đôi (Bisection): Δ_n = |b_n - a_n|
@@ -178,17 +169,7 @@ flowchart TD
 
 ### 2.3 Đồ Thị Hội Tụ (log|Δ_n| vs n)
 
-**ASCII Convergence Graph** (Newton fastest quadratic):
-```
-log|Δ| \
-     |     Secant (1.618)
-     |    /
-     |   / Newton (2)
-     |  /
-     | / Fixed
-     |/ Bisection (1)
-----+---1--2--3--4--5--> n (iters)
-```
+![Đồ Thị Hội Tụ](images/convergence.png)
 
 **Bảng log|error|**:
 | Method     | n=1    | n=2     | n=3     | n=4     | n=5     |
@@ -198,18 +179,10 @@ log|Δ| \
 | Newton    | -6.72  | -14.0   | -28.0   | <ε      | <ε      |
 | Fixed-pt  | -5.90  | -12.0   | -24.0   | <ε      | <ε      |
 
-### 2.4 NPV Graph (ASCII từ app Plotly):
-```
-NPV(r)
-1500 |  ****
-     |   **
-1000 |    **
-     |     *
- 500 |      *
-   0 |-------*-----0.2154-----r
--100 |                *
-     0    0.1   0.2   0.3   1.0
-```
+### 2.4 NPV Graph
+
+![NPV Graph](images/npv.png)
+
 
 ### 2.5 Code Snippets (Từ algorithms.py)
 **Bisection core**:
