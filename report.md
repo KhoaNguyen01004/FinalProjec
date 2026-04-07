@@ -50,76 +50,90 @@ $$f'(r) = -\sum_{i=1}^n \frac{i C_i}{(1+r)^{i+1}}, \quad f''(r) = \sum_{i=1}^n \
 
 #### 2.1.1 Chia Đôi
 ```mermaid
-graph TD
-    A[START: a=0, b=1] --> B{f(a)f(b)<0?}
-    B -->|NO| C[Lỗi: No root]
-    B -->|YES| D[n=0, Δ=|b-a|=1.0]
-    D --> E[c=(a+b)/2, f(c)]
-    E --> F[Append: n, a, b, c, f(c), Δ]
-    F --> G{Δ<ε?}
-    G -->|YES| H[Return c, n]
-    G -->|NO| I{n>max?}
+flowchart TD
+    A["START: a=0, b=1"] --> B{"f(a)f(b) < 0?"}
+    B -->|NO| C["Lỗi: No root"]
+    B -->|YES| D["n=0, Δ=|b-a|=1.0"]
+    D --> E["c=(a+b)/2, f(c)"]
+    E --> F["Append: n, a, b, c, f(c), Δ"]
+    F --> G{"Δ < ε?"}
+    G -->|YES| H["Return c, n"]
+    G -->|NO| I{"n > max?"}
     I -->|YES| H
-    I -->|NO| J{f(a)f(c)<0?}
-    J -->|YES| K[b=c]
-    J -->|NO| L[a=c]
+    I -->|NO| J{"f(a)f(c) < 0?"}
+    J -->|YES| K["b = c"]
+    J -->|NO| L["a = c"]
     K --> D
     L --> D
 ```
 
+
 #### 2.1.2 Dây Cung (Secant)
 ```mermaid
-graph TD
-    A[START: x0=0, x1=0.1] --> B[n=0]
-    B --> C[f0=f(x0), f1=f(x1)]
-    C --> D{|f1-f0|<1e-10?}
-    D -->|YES| E[Return x1, n]
-    D -->|NO| F[x2 = x1 - f1*(x1-x0)/(f1-f0)]
-    F --> G[Δ=|f1|/m, m=min|f'|]
-    G --> H{Δ<ε?}
-    H -->|YES| I[Return x2, n+1]
-    H -->|NO| J{n>max?}
+flowchart TD
+    A["START: x0=0, x1=0.1"] --> B["n=0"]
+    B --> C["f0=f(x0), f1=f(x1)"]
+    C --> D{"|f1-f0| < 1e-10?"}
+    D -->|YES| E["Return x1, n"]
+    D -->|NO| F["x2 = x1 - f1*(x1-x0)/(f1-f0)"]
+    F --> G["Δ=|f1|/m, m=min|f'|"]
+    G --> H{"Δ < ε?"}
+    H -->|YES| I["Return x2, n+1"]
+    H -->|NO| J{"n > max?"}
     J -->|YES| I
-    J -->|NO| K[x0=x1, x1=x2]
+    J -->|NO| K["x0=x1, x1=x2"]
     K --> B
 ```
+
 
 #### 2.1.3 Newton-Raphson
 ```mermaid
-graph TD
-    A[START: x0=0.1] --> B[n=0]
-    B --> C[f=f(x0), f'=f'(x0)]
-    C --> D{|f'|<1e-10?}
-    D -->|YES| E[Lỗi: f'=0]
-    D -->|NO| F[x1=x0 - f/f']
-    F --> G[Δx=|x1-x0|, Δ=(M/2m)Δx²]
-    G --> H{Δ<ε?}
-    H -->|YES| I[Return x1, n+1]
-    H -->|NO| J{n>max?}
+flowchart TD
+    A["START: x0=0.1"] --> B["n=0"]
+    B --> C["f=f(x0), f'=f'(x0)"]
+    C --> D{"|f'| < 1e-10?"}
+    D -->|YES| E["Lỗi: f'=0"]
+    D -->|NO| F["x1=x0 - f/f'"]
+    F --> G["Δx=|x1-x0|, Δ=(M/2m)Δx²"]
+    G --> H{"Δ < ε?"}
+    H -->|YES| I["Return x1, n+1"]
+    H -->|NO| J{"n > max?"}
     J -->|YES| I
-    J -->|NO| K[x0=x1]
+    J -->|NO| K["x0=x1"]
     K --> B
 ```
+</xai:function_call)
+
+
+
+
+
+<xai:function_call name="edit_file">
+<parameter name="path">d:/SIU/PhuongPhapSo/FinalProjec/TODO.md
 
 #### 2.1.4 Lặp Điểm Cố Định
 ```mermaid
-graph TD
-    A[START: x0=0.1] --> B[q=max|g'(r)|]
-    B --> C{q>=1?}
-    C -->|YES| D[Cảnh báo: Không hội tụ]
-    C -->|NO| E[n=0, prev=x0]
-    E --> F[f=f(x0), f'=f'(x0)]
-    F --> G{|f'|<1e-10?}
-    G -->|YES| H[Lỗi]
-    G -->|NO| I[x1=x0 - f/f']
-    I --> J[Δx=|x1-prev|, Δ=q/(1-q)Δx]
-    J --> K{Δ<ε?}
-    K -->|YES| L[Return x1, n+1]
-    K -->|NO| M{n>max?}
+flowchart TD
+    A["START: x0=0.1"] --> B["q=max|g'(r)|"]
+    B --> C{"q >= 1?"}
+    C -->|YES| D["Cảnh báo: Không hội tụ"]
+    C -->|NO| E["n=0, prev=x0"]
+    E --> F["f=f(x0), f'=f'(x0)"]
+    F --> G{"|f'| < 1e-10?"}
+    G -->|YES| H["Lỗi"]
+    G -->|NO| I["x1=x0 - f/f'"]
+    I --> J["Δx=|x1-prev|, Δ=q/(1-q)|Δx|"]
+    J --> K{"Δ < ε?"}
+    K -->|YES| L["Return x1, n+1"]
+    K -->|NO| M{"n > max?"}
     M -->|YES| L
-    M -->|NO| N[prev=x1, x0=x1]
+    M -->|NO| N["prev=x1, x0=x1"]
     N --> E
 ```
+</xai:function_call > 
+
+<xai:function_call name="edit_file">
+<parameter name="path">d:/SIU/PhuongPhapSo/FinalProjec/TODO.md
 
 ### 2.2 Bảng Lặp Chi Tiết (10 Bước Đầu, ε=1e-5)
 
