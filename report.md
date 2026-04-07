@@ -18,7 +18,7 @@
 
 ---
 
-## Chương 1: Cơ Sở Lý Thuyết {#chương-1-cơ-sở-lý-thuyết}
+## Chương 1: Cơ Sở Lý Thuyết
 
 ### 1.1 Bài Toán IRR & Phương Trình Phi Tuyến
 Lãi suất hoàn vốn (IRR) thỏa mãn **NPV=0**:
@@ -44,7 +44,7 @@ $$f'(r) = -\sum_{i=1}^n \frac{i C_i}{(1+r)^{i+1}}, \quad f''(r) = \sum_{i=1}^n \
 
 ---
 
-## Chương 2: Các Thuật Toán Lặp Chi Tiết & Trực Quan Hóa {#chương-2-các-thuật-toán-lặp-chi-tiết--trực-quan-hóa}
+## Chương 2: Các Thuật Toán Lặp Chi Tiết & Trực Quan Hóa
 
 **Cài đặt**: ε=1e-5, max_iter=1000, x0=0.1. Kết quả thực nghiệm (từ test_algorithms.py).
 
@@ -206,7 +206,7 @@ else: a, fa = c, fc
 
 ---
 
-## Chương 3: Kết Luận, Nhận Xét & Sản Phẩm Ứng Dụng {#chương-3-kết-luận-nhận-xét--sản-phẩm-ứng-dụng}
+## Chương 3: Kết Luận, Nhận Xét & Sản Phẩm Ứng Dụng
 
 ### 3.1 Tóm Tắt Kết Quả
 - **Đúng đắn**: Tất 4 methods hội tụ IRR=21.54% (test_algorithms.py xác nhận).
