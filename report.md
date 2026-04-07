@@ -14,6 +14,8 @@
 3. [Chương 3: Kết Luận, Nhận Xét & Sản Phẩm Ứng Dụng](#chương-3-kết-luận-nhận-xét--sản-phẩm-ứng-dụng)
 4. [Phụ Lục: Bảng Lặp Đầy Đủ & Test](#phụ-lục-bảng-lặp-đầy-đủ--test)
 
+**Chú ý**: Links hoạt động đúng với anchors {#id} dưới mỗi heading.
+
 ---
 
 ## Chương 1: Cơ Sở Lý Thuyết {#chương-1-cơ-sở-lý-thuyết}
