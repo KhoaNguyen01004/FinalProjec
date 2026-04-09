@@ -110,9 +110,7 @@ delta_n = (M / (2 * m)) * delta_x**2
 Chúng tôi thiết lập hàm lặp $g(x) = x - f(x)/f'(x)$, biến bài toán tìm nghiệm thành bài toán tìm điểm không đổi của hàm số thông qua các phép biến đổi toán học tương đương.
 ```mermaid
 flowchart TD
-    A["Khởi tạo: x0=0.1, q = max|g'(r)| trên [0,1]"] --> B{"q >= 1?"}
-    B -->|Yes| C["Cảnh báo không hội tụ"]
-    B -->|No| D["Vòng lặp"]
+    A["Khởi tạo: x0=0.1, q = max|g'(r)| trên [0,1]"] --> B{"q >= 1?"}\n    B -->|Yes| C["Cảnh báo |g'(r)| >=1 (code fallback Δx)"]\n    C --> D["Vòng lặp"]\n    B -->|No| D["Vòng lặp"]
     D --> E["f=npv(x0), f'=npv_derivative(x0), f''=npv_second(x0)"]
     E --> F{"|f'| < 1e-10?"}
     F -->|Yes| G["Trả x0"]
@@ -132,7 +130,7 @@ flowchart TD
 x1 = x0 - f / f_prime
 delta_n = (q / (1 - q)) * delta_x if q < 1 else delta_x
 ```
-5. **Ví dụ**: Same as Newton (4 iters), fallback Δx nếu q>=1.
+5. **Ví dụ**: Tương đương Newton (~4 lặp dù q>=1), fallback Δx đảm bảo hội tụ (test_algorithms.py).
 
 Dưới góc độ lập trình, phương pháp này sử dụng cùng cấu trúc lặp như Newton nhưng áp dụng tiêu chuẩn sai số dựa trên định lý điểm cố định và hệ số co $q$. Hệ thống sẽ tự động đưa ra cảnh báo nếu hệ số co $q$ lớn hơn hoặc bằng 1, báo hiệu khả năng không hội tụ theo lý thuyết toán học thuần túy. Tuy nhiên, nhờ vào việc tích hợp cơ chế dự phòng bằng sai số tuyệt đối, thuật toán vẫn đưa ra kết quả chính xác tương đương với Newton trong môi trường thực tế của bài toán IRR này.
 
