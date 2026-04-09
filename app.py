@@ -125,23 +125,22 @@ if st.button("Tính IRR", type="primary", width="stretch"):
             display_warning_multiple_roots()
         
         # Check if root exists (keep original for warning)
-        orig_a, orig_b, root_exists = find_root_interval(cash_flows)
-        
-        # Force standard [0,1] interval for Bisection table consistency (Δ_0=1.0 → 0.5,0.25...)
+        # Default interval for bisection table consistency
         a, b = 0.0, 1.0
+        fa, fb = npv(a, cash_flows), npv(b, cash_flows)
         
-        # Removed interval info per feedback
-
-
-        
-        if not npv(a, cash_flows) * npv(b, cash_flows) < 0:
-            st.warning("f(0)*f(1) >= 0 - không đảm bảo nghiệm trong [0,1]")
-        
-        if not root_exists:
-            st.error(
-                "Không tìm thấy IRR. Kiểm tra dòng tiền."
-            )
-            st.stop()
+        if fa * fb >= 0:
+            st.warning("f(0)*f(1) >= 0 - không đảm bảo nghiệm trong [0,1], tìm khoảng mở rộng...")
+            orig_a, orig_b, root_exists = find_root_interval(cash_flows, max_range=1000)
+            if not root_exists:
+                st.error(
+                    "Không tìm thấy nghiệm IRR trong khoảng [-1000%, +1000%]. Vui lòng kiểm tra lại thông số dòng tiền đầu vào."
+                )
+                st.stop()
+            a, b = orig_a, orig_b
+            st.info(f"Tìm khoảng: [{a:.3f}, {b:.3f}]")
+        else:
+            st.info("Nghiệm đảm bảo trong [0,1]")
 
 
         
@@ -162,22 +161,29 @@ if st.button("Tính IRR", type="primary", width="stretch"):
             results = []
             traces = {}
             convergence_warnings = {}
+            f_values = {}  # Add f(root) for quality check
             
             for method_name, method_func in methods:
                 if method_name == "Chia đôi":
                     root, iters, time_ms, history, columns = method_func(
                         cash_flows, a=a, b=b, tol=tolerance, max_iter=max_iterations
                     )
+                    f_root = npv(root, cash_flows)
+                    f_values[method_name] = f_root
                     convergence_warnings[method_name] = False
                 elif method_name == "Dây cung":
                     root, iters, time_ms, history, columns = method_func(
                         cash_flows, a=a, b=b, x0=a, x1=a+0.1, tol=tolerance, max_iter=max_iterations
                     )
+                    f_root = npv(root, cash_flows)
+                    f_values[method_name] = f_root
                     convergence_warnings[method_name] = False
                 elif method_name == "Lặp điểm cố định":
                     root, iters, time_ms, history, columns, warning = method_func(
                         cash_flows, a=a, b=b, x0=a, tol=tolerance, max_iter=max_iterations
                     )
+                    f_root = npv(root, cash_flows)
+                    f_values[method_name] = f_root
                     convergence_warnings[method_name] = warning
                 else:  # Newton-Raphson
                     root, iters, time_ms, history, columns = method_func(
@@ -185,14 +191,17 @@ if st.button("Tính IRR", type="primary", width="stretch"):
                     )
                     convergence_warnings[method_name] = False
                 
-                results.append([method_name, root, iters, time_ms])
+                # Valid if converged: |f(root)| small or iters < max_iter
+                is_valid = (abs(f_root) < 1e-2) or (iters < max_iterations)
+                results.append([method_name, root, iters, time_ms, f_root, is_valid])
                 traces[method_name] = (history, columns)
 
         
         st.success("Tính toán xong!")
         
         # Create results dataframe
-        df = pd.DataFrame(results, columns=["Phương pháp", "IRR", "Số lần lặp", "Thời gian (ms)"])
+        df = pd.DataFrame(results, columns=["Phương pháp", "IRR", "Số lần lặp", "Thời gian (ms)", "f(IRR)", "Valid"])
+        df = df.sort_values("Số lần lặp").reset_index(drop=True)  # Best first
         
         st.divider()
         
@@ -200,19 +209,42 @@ if st.button("Tính IRR", type="primary", width="stretch"):
         st.subheader("Kết Quả & Nhận Xét")
         
         if not df.empty:
-            irr_value = df.iloc[0]["IRR"]
+            # Best IRR from first valid method (methods converge to same r if interval correct)
+            valid_methods = df[df["Valid"] == True].sort_values("Số lần lặp")
+            if len(valid_methods) > 0:
+                irr_value = valid_methods["IRR"].iloc[0]
+            else:
+                irr_value = df["IRR"].iloc[0] if not df.empty else np.nan
             
-            # Find fastest method
-            min_iterations = df["Số lần lặp"].min()
-            fastest_methods = df[df["Số lần lặp"] == min_iterations]["Phương pháp"].tolist()
-            fastest_str = ", ".join(fastest_methods) if len(fastest_methods) > 1 else fastest_methods[0]
+            # Find fastest method (exclude failed bisection with 0 iters)
+            df_success = df[df["Số lần lặp"] > 0]
+            if not df_success.empty:
+                min_iterations = df_success["Số lần lặp"].min()
+                fastest_methods = df_success[df_success["Số lần lặp"] == min_iterations]["Phương pháp"].tolist()
+                fastest_str = ", ".join(fastest_methods) if len(fastest_methods) > 1 else fastest_methods[0]
+            else:
+                fastest_str = "Không có phương pháp nào hội tụ"
+                min_iterations = 0
             
             # Display IRR prominently
             col1, col2 = st.columns(2)
             with col1:
                 if np.isfinite(irr_value):
                     irr_percentage = irr_value * 100
-                    st.write(f"**Lãi Suất Hoàn Vốn (IRR):** {irr_percentage:.2f}%")
+                    
+                    # Warnings
+                    if df["Phương pháp"].iloc[0] == "Chia đôi" and df["Số lần lặp"].iloc[0] == 0:
+                        st.error("⚠️ **Chia đôi thất bại**: Không có nghiệm trong [0,1] (f(0)*f(1)>0). Dùng 3 methods kia.")
+                    if irr_value < 0 or irr_value > 2:
+                        st.warning("⚠️ **IRR bất thường**: <0% hoặc >200%. Kiểm tra dòng tiền.")
+                    
+                    st.markdown(f"""
+                                    <div style='font-size: 28px; color: #10B981; font-weight: bold;'>
+                                    IRR = {irr_percentage:.3f}%
+                                    </div>
+                                    <br>
+                                    <small>(từ phương pháp hội tụ nhanh nhất)</small>
+                                    """, unsafe_allow_html=True)
                 else:
                     st.write("**Lãi Suất Hoàn Vốn (IRR):** Không xác định")
                     irr_percentage = None
@@ -267,11 +299,12 @@ if st.button("Tính IRR", type="primary", width="stretch"):
         st.subheader("Bảng So Sánh Chi Tiết")
         
         # Format columns for display - FIXED IRR column error
-        df_display = df.copy()
-        df_display = df_display.rename(columns={'IRR': 'IRR (%)'})
+        df_display = df[["Phương pháp", "IRR", "Số lần lặp", "Thời gian (ms)", "Valid"]].copy()
+        df_display["IRR (%)"] = df_display["IRR"].apply(lambda x: f"{float(x)*100:.2f}%" if np.isfinite(float(x)) else "N/A")
+        df_display["Valid"] = df_display["Valid"].apply(lambda x: "✅" if x else "❌")
         df_display["Thời gian (ms)"] = df_display["Thời gian (ms)"].apply(lambda x: f"{x:.4f}")
-        df_display["IRR (%)"] = df_display["IRR (%)"].apply(lambda x: f"{float(x)*100:.2f}%" if np.isfinite(float(x)) else "N/A")
-        st.table(df_display)
+        df_display = df_display.sort_values("Số lần lặp")  # Best first
+        st.dataframe(df_display, width="stretch")
         
         # Show applied settings
         st.write(f"**Cấu hình tính toán:** Sai số mục tiêu = {tolerance:.0e}, Số lần lặp tối đa = {max_iterations}")

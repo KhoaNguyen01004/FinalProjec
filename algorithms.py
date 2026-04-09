@@ -39,13 +39,13 @@ def bisection_method(cash_flows: Sequence[float], a: float = 0, b: float = 1, to
     history = [[0, a, b, None, None, abs(b - a)]]
 
     columns = ["n", "a_n", "b_n", "c_n", "f(c_n)", "Δ_n"]
-    start_time = time.time()
+    start_time = time.perf_counter()
     
     fa = npv(a, cash_flows)
     fb = npv(b, cash_flows)
     
     if fa * fb >= 0:
-        return (a + b) / 2, 0, (time.time() - start_time)*1000, history, columns
+        return (a + b) / 2, 0, (time.perf_counter() - start_time)*1000, history, columns
     
     for it in range(max_iter):
         c = (a + b) / 2
@@ -55,7 +55,7 @@ def bisection_method(cash_flows: Sequence[float], a: float = 0, b: float = 1, to
         history.append([it+1, a, b, c, fc, delta_n])
         
         if delta_n < tol or fc == 0:
-            return c, it+1, (time.time() - start_time)*1000, history, columns
+            return c, it+1, (time.perf_counter() - start_time)*1000, history, columns
         
         if fa * fc < 0:
             b, fb = c, fc
@@ -63,7 +63,7 @@ def bisection_method(cash_flows: Sequence[float], a: float = 0, b: float = 1, to
             a, fa = c, fc
     
     c = (a + b) / 2
-    return c, max_iter, (time.time() - start_time)*1000, history, columns
+    return c, max_iter, (time.perf_counter() - start_time)*1000, history, columns
 
 
 def secant_method(cash_flows: Sequence[float], a: float = 0, b: float = 1, x0: float = 0, x1: float = 0.1, tol: float = 1e-5, max_iter: int = 1000) -> tuple[float, int, float, list[list[float]], list[str]]:
@@ -82,14 +82,14 @@ def secant_method(cash_flows: Sequence[float], a: float = 0, b: float = 1, x0: f
     
     history = []
     columns = ["n", "x_n", "f(x_n)", "Δ_n"]
-    start_time = time.time()
+    start_time = time.perf_counter()
     
     for it in range(max_iter):
         f0 = npv(x0, cash_flows)
         f1 = npv(x1, cash_flows)
         
         if abs(f1 - f0) < 1e-10:
-            return x1, it, (time.time() - start_time)*1000, history, ["n", "x_n", "f(x_n)", "Δ_n"]
+            return x1, it, (time.perf_counter() - start_time)*1000, history, ["n", "x_n", "f(x_n)", "Δ_n"]
         
         x2 = x1 - f1 * (x1 - x0) / (f1 - f0)
         delta_n = abs(f1) / m1 if m1 > 0 else abs(f1)
@@ -97,11 +97,11 @@ def secant_method(cash_flows: Sequence[float], a: float = 0, b: float = 1, x0: f
         history.append([it+1, x1, f1, delta_n])
         
         if delta_n < tol:
-            return x2, it+1, (time.time() - start_time)*1000, history, columns
+            return x2, it+1, (time.perf_counter() - start_time)*1000, history, columns
         
         x0, x1 = x1, x2
     
-    return x2, max_iter, (time.time() - start_time)*1000, history, columns
+    return x2, max_iter, (time.perf_counter() - start_time)*1000, history, columns
 
 
 def newton_raphson_method(cash_flows: Sequence[float], a: float = 0, b: float = 1, x0: float = 0.2, tol: float = 1e-5, max_iter: int = 1000) -> tuple[float, int, float, list[list[float]], list[str]]:
@@ -119,14 +119,14 @@ def newton_raphson_method(cash_flows: Sequence[float], a: float = 0, b: float = 
     
     history = []
     columns = ["n", "x_n", "Δ_n"]
-    start_time = time.time()
+    start_time = time.perf_counter()
     
     for it in range(max_iter):
         f = npv(x0, cash_flows)
         f_prime = npv_derivative(x0, cash_flows)
         
         if abs(f_prime) < 1e-10 or not np.isfinite(f_prime):
-            return x0, it, (time.time() - start_time)*1000, history, columns
+            return x0, it, (time.perf_counter() - start_time)*1000, history, columns
         
         x1 = x0 - f / f_prime
         delta_x = abs(x1 - x0)
@@ -135,7 +135,7 @@ def newton_raphson_method(cash_flows: Sequence[float], a: float = 0, b: float = 
         history.append([it+1, x1, delta_n])
         
         if delta_x < tol or abs(f) < tol:
-            return x1, it+1, (time.time() - start_time)*1000, history, columns
+            return x1, it+1, (time.perf_counter() - start_time)*1000, history, columns
         
         x0 = x1
     

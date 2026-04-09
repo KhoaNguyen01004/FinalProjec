@@ -4,7 +4,7 @@
 
 **Mục đích báo cáo**: Tài liệu nghiên cứu chi tiết phục vụ tiểu luận ba chương bao gồm hệ thống hóa lý thuyết toán học chuyên sâu, phân tích kỹ thuật các thuật toán lập trình thực tế kèm theo biểu đồ minh họa và đánh giá toàn diện sản phẩm ứng dụng công nghệ.
 
-Nghiệm chính xác IRR thu được xấp xỉ **0.21539** (tương đương 21.54%) dựa trên các kịch bản kiểm thử từ hệ thống `test_algorithms.py`.
+Nghiệm chính xác IRR thu được xấp xỉ **0.215391** (tương đương 21.54%)
 
 ---
 
@@ -16,7 +16,7 @@ Nghiệm chính xác IRR thu được xấp xỉ **0.21539** (tương đương 2
 
 ---
 
-## Chương 1: Cơ Sở Lý Thuyết {#chương-1-cơ-sở-lý-thuyết}
+## Chương 1: Cơ Sở Lý Thuyết
 
 ### 1.1 Bài Toán IRR & Phương Trình Phi Tuyến trong Tài Chính
 Bài toán xác định Lãi suất hoàn vốn nội bộ (Internal Rate of Return - IRR) bản chất là việc đi tìm nghiệm của phương trình phi tuyến sao cho Giá trị hiện tại thuần (Net Present Value - NPV) của một dự án đầu tư bằng không. Trong mô hình toán học này, hàm số $f(r)$ được thiết lập dựa trên dòng tiền đầu tư ban đầu $C_0$ và các dòng tiền thu về trong tương lai $C_i$. Công thức tổng quát được biểu diễn dưới dạng tổng các giá trị chiết khấu về thời điểm hiện tại, yêu cầu tìm giá trị $r$ trong khoảng thực tế từ 0 đến 1 sao cho tổng này triệt tiêu hoàn toàn.
@@ -36,7 +36,7 @@ Trong trường hợp lặp điểm cố định, chúng tôi tính toán hệ s
 
 ---
 
-## Chương 2: Các Thuật Toán Lặp Chi Tiết & Trực Quan Hóa {#chương-2-các-thuật-toán-lặp-chi-tiết--trực-quan-hóa}
+## Chương 2: Các Thuật Toán Lặp Chi Tiết & Trực Quan Hóa 
 
 Cài đặt của ứng dụng dựa trên các tham số tiêu chuẩn bao gồm sai số $\epsilon=1e-5$, số lần lặp tối đa 1000 lần và điểm khởi đầu mặc định $x_0=0.1$. Tất cả các kết quả thực nghiệm dưới đây đều được trích xuất trực tiếp từ các module xử lý dữ liệu của chương trình.
 
@@ -195,19 +195,19 @@ history.append([it+1, a, b, c, fc, abs(b - a)])
 ### 2.6 Bảng So Sánh Hiệu Năng (từ test_algorithms.py)
 | Method         | Iters | Time(ms) | Stability |
 |----------------|-------|----------|-----------|
-| Bisection     | 18    | 0.0000   | High      |
-| Secant        | 6     | 0.0000   | Medium    |
-| Newton        | 4     | 1.0614   | Low       |
+| Bisection     | 18    | 0.0658   | High      |
+| Secant        | 6     | 0.0320   | Medium    |
+| Newton        | 4     | 0.0374   | Low       |
 | Fixed-pt      | 4     | 0.0000   | Medium    |
 
 **Nhanh nhất**: Newton/Fixed-pt (4 iters).
 
 ---
 
-## Chương 3: Kết Luận, Nhận Xét & Sản Phẩm Ứng Dụng {#chương-3-kết-luận-nhận-xét--sản-phẩm-ứng-dụng}
+## Chương 3: Kết Luận, Nhận Xét & Sản Phẩm Ứng Dụng 
 
 ### 3.1 Tóm Tắt Kết Quả
-- **Đúng đắn**: Tất cả hội tụ IRR=0.21539 (test xác nhận).
+- **Đúng đắn**: Tất cả hội tụ IRR=0.215391 (test xác nhận).
 - **Hiệu năng**: Newton/Fixed nhanh nhất (4 iters), Bisection ổn định (18 iters).
 - **Chạy app**: `streamlit run app.py` → dashboard tương tác.
 
@@ -234,14 +234,49 @@ Multi-IRR, MIRR profiles, ML initial guess.
 
 ---
 
-## Phụ Lục: Bảng Lặp Đầy Đủ & Test {#phụ-lục-bảng-lặp-đầy-đủ--test}
+## Phụ Lục: Bảng Lặp Đầy Đủ & Test
 
 **test_algorithms.py output** (exact, ε=1e-5):
 ```
-BISECTION: root=0.215389, 18 iters, 0.0000 ms ✓
-SECANT: root=0.215391, 6 iters, 0.0000 ms ✓
-NEWTON: root=0.215391, 4 iters, 1.0614 ms ✓
-FIXED: root=0.215391, 4 iters, 0.0000 ms (q>=1 warning) ✓
+======================================================================
+TESTING ALL 4 ALGORITHMS WITH TEXTBOOK-COMPLIANT IMPLEMENTATIONS
+======================================================================
+1. BISECTION METHOD (Chia đôi)
+----------------------------------------------------------------------
+   Root (IRR): 0.215389
+   Iterations: 18
+   Time: 0.0658 ms
+   Status: SUCCESS ✓
+2. SECANT METHOD (Dây cung)
+----------------------------------------------------------------------
+   Root (IRR): 0.215391
+   Iterations: 6
+   Time: 0.0320 ms
+   Status: SUCCESS ✓
+
+3. NEWTON-RAPHSON METHOD (Newton)
+----------------------------------------------------------------------
+   Root (IRR): 0.215391
+   Iterations: 4
+   Time: 0.0374 ms
+   Status: SUCCESS ✓
+
+4. FIXED-POINT ITERATION (Lặp đơn)
+----------------------------------------------------------------------
+WARNING: Fixed-point may not converge (|g'(r)| >= 1)
+   Root (IRR): 0.215391
+   Iterations: 4
+   Time: 0.0000 ms
+   Status: SUCCESS ✓
+
+======================================================================
+SUMMARY
+======================================================================
+✓ All algorithms implement textbook-compliant stopping criteria
+✓ Secant returns (root, iters, time, history, None)
+✓ Fixed-point returns (root, iters, time, history, convergence_warning)
+✓ Bisection and Newton-Raphson return (root, iters, time, history)
+======================================================================
 ```
 
 **Tài liệu**: Burden Numerical Analysis Ch2. Source: 8 files (app.py, algorithms.py, etc.).

@@ -97,35 +97,47 @@ def check_root_existence(cash_flows, a=0, b=1):
     return fa * fb < 0
 
 
-def find_root_interval(cash_flows, max_range=100):
+def find_root_interval(cash_flows, max_range=1000):
     """
     Automatically find an interval [a, b] where a root exists.
+    Prioritizes positive economic IRR: searches [0, max_range] first,
+    then negative if needed. Adaptive expansion for efficiency.
     
     Parameters:
     -----------
     cash_flows : list or array
         Array of cash flows
     max_range : float
-        Maximum range to search (default 100, meaning -100 to 100%)
+        Maximum range to search (default 1000)
     
     Returns:
     --------
     tuple : (a, b, found)
-        a, b: interval where root exists
-        found: True if root exists, False otherwise
+        a, b: interval where root exists (f(a)*f(b) < 0)
+        found: True if found, False otherwise
     """
-    # Test points from positive to negative, prioritize positive roots
-    test_points = [0, 0.01, 0.1, 0.5, 1, 2, 5, 10, 20, 50, 100, -0.1, -0.5, -1, -2, -5, -10, -20, -50, -100]
-    
-    for i in range(len(test_points) - 1):
-        fa = npv(test_points[i], cash_flows)
-        fb = npv(test_points[i + 1], cash_flows)
-        
+    # First, try positive rates [0, max_range]
+    a = 0.0
+    fa = npv(a, cash_flows)
+    b = 0.01
+    step = 0.01
+    while b <= max_range:
+        fb = npv(b, cash_flows)
         if fa * fb < 0:
-            return test_points[i], test_points[i + 1], True
+            return a, b, True
+        b += step
+        if b > 1.0: step *= 1.5  # Adaptive larger steps
     
-    # No root found in extended range
-    return -1, 1, False
+    # Then negative rates [-min(0.99, max_range), 0]
+    neg_range = min(0.99, max_range)
+    a = -neg_range
+    fa = npv(a, cash_flows)
+    b = 0.0
+    fb = npv(b, cash_flows)
+    if fa * fb < 0:
+        return a, b, True
+    
+    return -1, -1, False
 
 
 def count_sign_changes(cash_flows):
