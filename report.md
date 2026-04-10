@@ -110,15 +110,18 @@ delta_n = (M / (2 * m)) * delta_x**2
 Chúng tôi thiết lập hàm lặp $g(x) = x - f(x)/f'(x)$, biến bài toán tìm nghiệm thành bài toán tìm điểm không đổi của hàm số thông qua các phép biến đổi toán học tương đương.
 ```mermaid
 flowchart TD
-    A["Khởi tạo: x0=0.1, q = max|g'(r)| trên [0,1]"] --> B{"q >= 1?"}\n    B -->|Yes| C["Cảnh báo |g'(r)| >=1 (code fallback Δx)"]\n    C --> D["Vòng lặp"]\n    B -->|No| D["Vòng lặp"]
-    D --> E["f=npv(x0), f'=npv_derivative(x0), f''=npv_second(x0)"]
+    A["Initialize: x0 = 0.1, q = max|g'(x)|"] --> B{"q >= 1?"}
+    B -->|Yes| C["Warning: Potential Divergence"]
+    B -->|No| D["Start Loop"]
+    C --> D
+    D --> E["Calculate: f(x0), f'(x0), f''(x0)"]
     E --> F{"|f'| < 1e-10?"}
-    F -->|Yes| G["Trả x0"]
-    F -->|No| H["x1 = x0 - f/f'"]
-    H --> I["Δx=|x1-prev|, Δ_n = q/(1-q)*Δx nếu q < 1 else Δx"]
-    I --> J{"Δ_n < tol?"}
-    J -->|Yes| K["Trả x1"]
-    J -->|No| L["prev=x1, x0=x1"]
+    F -->|Yes| G["Return x0 (Avoid Division by Zero)"]
+    F -->|No| H["Update: x1 = x0 - f/f'"]
+    H --> I["Calculate Error:<br>Δx = |x1 - x0|<br>Δn = (q/(1-q))*Δx if q < 1 else Δx"]
+    I --> J{"Δn < tol?"}
+    J -->|Yes| K["Return x1 (Converged)"]
+    J -->|No| L["Update Variables:<br>x0 = x1"]
     L --> D
 ```
 **Giải thích Lặp điểm cố định (g(x)=x - f(x)/f'(x)):**
