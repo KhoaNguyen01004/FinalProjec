@@ -170,19 +170,19 @@ def display_results_table(df):
     )
 
 
-def display_detailed_info(tolerance=1e-5, max_iterations=1000):
-    """Display detailed algorithm parameters and settings."""
-    st.subheader("Thông tin Chi Tiết")
+def display_detailed_info(a, b, tolerance, max_iterations):
+    """Display dynamic algorithm parameters used."""
+    st.subheader("Thông số Tính Toán Đã Sử Dụng")
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        st.metric("Sai số mục tiêu (ε)", f"{tolerance:.0e}")
+        st.metric("Sai số (ε)", f"{tolerance:.0e}")
     
     with col2:
-        st.metric("Khoảng tìm kiếm", "[0, 1]")
+        st.metric("Khoảng [a,b]", f"[ {a:.2f}, {b:.2f} ]")
     
     with col3:
-        st.metric("Số lần lặp tối đa", f"{max_iterations}")
+        st.metric("Số lặp tối đa", max_iterations)
 
 
 def display_commentary(df):

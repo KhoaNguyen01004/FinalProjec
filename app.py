@@ -131,21 +131,24 @@ if st.button("Tính IRR", type="primary", width="stretch"):
         
         if fa * fb >= 0:
             st.warning("f(0)*f(1) >= 0 - không đảm bảo nghiệm trong [0,1], tìm khoảng mở rộng...")
-            orig_a, orig_b, root_exists = find_root_interval(cash_flows, max_range=1000)
-            if not root_exists:
+            orig_a, orig_b, root_exists = find_root_interval(cash_flows)
+            if orig_a is None or orig_b is None or not root_exists:
                 st.error(
-                    "Không tìm thấy nghiệm IRR trong khoảng [-1000%, +1000%]. Vui lòng kiểm tra lại thông số dòng tiền đầu vào."
+                    "Không tìm thấy khoảng phân ly nghiệm IRR hợp lệ. Vui lòng kiểm tra dòng tiền đầu vào."
                 )
                 st.stop()
+            # Ensure a < b
+            if orig_a > orig_b:
+                orig_a, orig_b = orig_b, orig_a
             a, b = orig_a, orig_b
-            st.info(f"Tìm khoảng: [{a:.3f}, {b:.3f}]")
+st.success(f"Tìm thấy khoảng phân ly nghiệm: [{a:.3f}, {b:.3f}] (f(a)*f(b) < 0)")
         else:
             st.info("Nghiệm đảm bảo trong [0,1]")
 
 
         
         if a != 0 or b != 1:
-            st.info(f"Tìm thấy IRR trong khoảng [{a}, {b}]. Mở rộng khoảng tìm kiếm từ [0, 1].")
+st.info(f"Sử dụng khoảng tìm kiếm mở rộng: [{a:.4f}, {b:.4f}]")
         
         st.divider()
         
@@ -234,9 +237,9 @@ if st.button("Tính IRR", type="primary", width="stretch"):
                     
                     # Warnings
                     if df["Phương pháp"].iloc[0] == "Chia đôi" and df["Số lần lặp"].iloc[0] == 0:
-                        st.error("⚠️ **Chia đôi thất bại**: Không có nghiệm trong [0,1] (f(0)*f(1)>0). Dùng 3 methods kia.")
+st.warning("Chia đôi dừng sớm: kiểm tra khoảng [a,b]")
                     if irr_value < 0 or irr_value > 2:
-                        st.warning("⚠️ **IRR bất thường**: <0% hoặc >200%. Kiểm tra dòng tiền.")
+st.warning("IRR bất thường: <0% hoặc >200%. Kiểm tra dòng tiền.")
                     
                     st.markdown(f"""
                                     <div style='font-size: 28px; color: #10B981; font-weight: bold;'>
@@ -301,7 +304,7 @@ if st.button("Tính IRR", type="primary", width="stretch"):
         # Format columns for display - FIXED IRR column error
         df_display = df[["Phương pháp", "IRR", "Số lần lặp", "Thời gian (ms)", "Valid"]].copy()
         df_display["IRR (%)"] = df_display["IRR"].apply(lambda x: f"{float(x)*100:.2f}%" if np.isfinite(float(x)) else "N/A")
-        df_display["Valid"] = df_display["Valid"].apply(lambda x: "✅" if x else "❌")
+df_display["Valid"] = df_display["Valid"].apply(lambda x: "Yes" if x else "No")
         df_display["Thời gian (ms)"] = df_display["Thời gian (ms)"].apply(lambda x: f"{x:.4f}")
         df_display = df_display.sort_values("Số lần lặp")  # Best first
         st.dataframe(df_display, width="stretch")
@@ -325,8 +328,8 @@ if st.button("Tính IRR", type="primary", width="stretch"):
         
         st.divider()
         
-        # Detailed info
-        display_detailed_info(tolerance, max_iterations)
+        # Detailed info - dynamic params
+        display_detailed_info(a, b, tolerance, max_iterations)
         
         st.divider()
         

@@ -97,47 +97,70 @@ def check_root_existence(cash_flows, a=0, b=1):
     return fa * fb < 0
 
 
-def find_root_interval(cash_flows, max_range=1000):
+def find_root_interval(cash_flows, max_range=100.0):
     """
-    Automatically find an interval [a, b] where a root exists.
-    Prioritizes positive economic IRR: searches [0, max_range] first,
-    then negative if needed. Adaptive expansion for efficiency.
+    Automatically find an interval [a, b] where root exists (f(a)*f(b) < 0, a < b).
+    Bidirectional adaptive search from 0: RIGHT (positive IRR priority), then LEFT (negative).
     
     Parameters:
     -----------
     cash_flows : list or array
         Array of cash flows
     max_range : float
-        Maximum range to search (default 1000)
+        Maximum |r| to search (default 100 = 10,000%)
     
     Returns:
     --------
-    tuple : (a, b, found)
-        a, b: interval where root exists (f(a)*f(b) < 0)
-        found: True if found, False otherwise
+    tuple[float, float, bool]: (a, b, found) with a < b guaranteed, or None,None,False
     """
-    # First, try positive rates [0, max_range]
-    a = 0.0
-    fa = npv(a, cash_flows)
-    b = 0.01
+    def safe_npv(r):
+        try:
+            val = npv(r, cash_flows)
+            return val if np.isfinite(val) else None
+        except:
+            return None
+    
+    center = 0.0
+    f_center = safe_npv(center)
+    if f_center is None:
+        return None, None, False
+    
     step = 0.01
-    while b <= max_range:
-        fb = npv(b, cash_flows)
-        if fa * fb < 0:
-            return a, b, True
-        b += step
-        if b > 1.0: step *= 1.5  # Adaptive larger steps
+    max_step = max_range * 0.1
     
-    # Then negative rates [-min(0.99, max_range), 0]
-    neg_range = min(0.99, max_range)
-    a = -neg_range
-    fa = npv(a, cash_flows)
-    b = 0.0
-    fb = npv(b, cash_flows)
-    if fa * fb < 0:
-        return a, b, True
+    # RIGHT: positive first (economic IRR priority)
+    a_right = center
+    b_right = center + step
+    f_right = safe_npv(b_right)
+    while b_right <= max_range:
+        if f_right is not None and f_center * f_right < 0:
+            return a_right, b_right, True
+        step = min(step * 1.2, max_step)
+        a_right = b_right
+        b_right += step
+        f_right = safe_npv(b_right)
     
-    return -1, -1, False
+    # LEFT: negative
+    step = 0.01
+    a_left = center - step
+    b_left = center
+    f_left = safe_npv(a_left)
+    while a_left >= -max_range:
+        if f_left is not None and f_left * f_center < 0:
+            return a_left, b_left, True
+        step = min(step * 1.2, max_step)
+        b_left = a_left
+        a_left -= step
+        f_left = safe_npv(a_left)
+    
+    # Desperate wide search
+    for attempt in [(-max_range, 0), (0, max_range)]:
+        fa = safe_npv(attempt[0])
+        fb = safe_npv(attempt[1])
+        if fa is not None and fb is not None and fa * fb < 0:
+            return attempt
+    
+    return None, None, False
 
 
 def count_sign_changes(cash_flows):
