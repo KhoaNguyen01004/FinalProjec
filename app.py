@@ -141,14 +141,12 @@ if st.button("Tính IRR", type="primary", width="stretch"):
             if orig_a > orig_b:
                 orig_a, orig_b = orig_b, orig_a
             a, b = orig_a, orig_b
-st.success(f"Tìm thấy khoảng phân ly nghiệm: [{a:.3f}, {b:.3f}] (f(a)*f(b) < 0)")
+            st.success(f"Tìm thấy khoảng phân ly nghiệm: [{a:.3f}, {b:.3f}] (f(a)*f(b) < 0)")
         else:
             st.info("Nghiệm đảm bảo trong [0,1]")
 
-
-        
         if a != 0 or b != 1:
-st.info(f"Sử dụng khoảng tìm kiếm mở rộng: [{a:.4f}, {b:.4f}]")
+            st.info(f"Sử dụng khoảng tìm kiếm mở rộng: [{a:.4f}, {b:.4f}]")
         
         st.divider()
         
@@ -237,9 +235,9 @@ st.info(f"Sử dụng khoảng tìm kiếm mở rộng: [{a:.4f}, {b:.4f}]")
                     
                     # Warnings
                     if df["Phương pháp"].iloc[0] == "Chia đôi" and df["Số lần lặp"].iloc[0] == 0:
-st.warning("Chia đôi dừng sớm: kiểm tra khoảng [a,b]")
+                        st.warning("Chia đôi dừng sớm: kiểm tra khoảng [a,b]")
                     if irr_value < 0 or irr_value > 2:
-st.warning("IRR bất thường: <0% hoặc >200%. Kiểm tra dòng tiền.")
+                        st.warning("IRR bất thường: <0% hoặc >200%. Kiểm tra dòng tiền.")
                     
                     st.markdown(f"""
                                     <div style='font-size: 28px; color: #10B981; font-weight: bold;'>
@@ -304,7 +302,7 @@ st.warning("IRR bất thường: <0% hoặc >200%. Kiểm tra dòng tiền.")
         # Format columns for display - FIXED IRR column error
         df_display = df[["Phương pháp", "IRR", "Số lần lặp", "Thời gian (ms)", "Valid"]].copy()
         df_display["IRR (%)"] = df_display["IRR"].apply(lambda x: f"{float(x)*100:.2f}%" if np.isfinite(float(x)) else "N/A")
-df_display["Valid"] = df_display["Valid"].apply(lambda x: "Yes" if x else "No")
+        df_display["Valid"] = df_display["Valid"].apply(lambda x: "Yes" if x else "No")
         df_display["Thời gian (ms)"] = df_display["Thời gian (ms)"].apply(lambda x: f"{x:.4f}")
         df_display = df_display.sort_values("Số lần lặp")  # Best first
         st.dataframe(df_display, width="stretch")
